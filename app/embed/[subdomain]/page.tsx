@@ -5,10 +5,12 @@ import type { PublicForm } from '@/types/app'
 
 interface Props { params: Promise<{ subdomain: string }> }
 
-const supabase = createClient(
+function getSupabase() {
+  return createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-)
+  )
+}
 
 export const revalidate = 60
 

@@ -4,14 +4,16 @@ import { PublicFormClient } from './public-form-client'
 import type { PublicForm } from '@/types/app'
 import type { Metadata } from 'next'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  )
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ subdomain: string }> }): Promise<Metadata> {
   const { subdomain } = await params
-  const { data: form } = await supabase.from('forms').select('name, description').eq('subdomain', subdomain).single()
+  const { data: form } = await getSupabase().from('forms').select('name, description').eq('subdomain', subdomain).single()
   return {
     title: form?.name ?? 'Enter the Draw',
     description: form?.description ?? 'Enter for a chance to win.',
