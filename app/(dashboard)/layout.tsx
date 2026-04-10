@@ -1,0 +1,74 @@
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { AppSidebar } from '@/components/dashboard/app-sidebar'
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { Separator } from '@/components/ui/separator'
+import {
+  Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage,
+} from '@/components/ui/breadcrumb'
+
+async function getLayoutData(userId: string) {
+  const supabase = await createClient()
+
+  const [{ data: membership }, { data: profile }] = await Promise.all([
+    supabase
+      .from('workspace_members')
+      .select('workspace_id, role, workspaces(*)')
+      .eq('user_id', userId)
+      .limit(1)
+      .single(),
+    supabase.from('profiles').select('full_name').eq('id', userId).single(),
+  ])
+
+  if (!membership) return null
+
+  const workspace = (membership.workspaces as any) as {
+    id: string; name: string; slug: string; logo_url: string | null
+  }
+
+  const { data: sub } = await supabase
+    .from('subscriptions')
+    .select('plan')
+    .eq('workspace_id', workspace.id)
+    .maybeSingle()
+
+  return { workspace, plan: sub?.plan ?? 'free', fullName: profile?.full_name ?? null }
+}
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const data = await getLayoutData(user.id)
+  if (!data) redirect('/login')
+
+  const { workspace, plan, fullName } = data
+
+  return (
+    <SidebarProvider>
+      <AppSidebar
+        workspace={workspace}
+        plan={plan}
+        userEmail={user.email}
+        userName={fullName ?? undefined}
+      />
+      <SidebarInset>
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-sidebar-border px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbPage className="text-sm font-medium">DrawVault</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </header>
+        <div className="flex flex-1 flex-col">
+          {children}
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  )
+}
