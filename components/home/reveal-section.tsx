@@ -8,9 +8,11 @@ interface RevealSectionProps {
   className?: string
   /** Fraction of the element that must be visible before triggering (default 0.1) */
   threshold?: number
+  /** Delay in ms before the reveal animation plays (for staggering siblings) */
+  delay?: number
 }
 
-export function RevealSection({ children, className, threshold = 0.1 }: RevealSectionProps) {
+export function RevealSection({ children, className, threshold = 0.1, delay = 0 }: RevealSectionProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
 
@@ -30,9 +32,10 @@ export function RevealSection({ children, className, threshold = 0.1 }: RevealSe
       ref={ref}
       className={cn(
         'transition-[opacity,transform] duration-700 ease-out will-change-[opacity,transform]',
-        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5',
+        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6',
         className,
       )}
+      style={{ transitionDelay: visible ? `${delay}ms` : '0ms' }}
     >
       {children}
     </div>

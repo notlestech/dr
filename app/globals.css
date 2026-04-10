@@ -225,3 +225,30 @@
 .delay-500 { animation-delay: 500ms; }
 .delay-600 { animation-delay: 600ms; }
 .delay-700 { animation-delay: 700ms; }
+
+/* ── Slot machine reel ───────────────────────────────────────────────────── */
+@keyframes reel {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+.animate-reel {
+  animation: reel 4s linear infinite;
+  will-change: transform;
+}
+
+/* ── Hero background glow ─────────────────────────────────────────────────── */
+.hero-glow {
+  background: radial-gradient(ellipse 90% 55% at 50% 0%,
+    color-mix(in oklch, var(--foreground) 5%, transparent),
+    transparent 75%);
+  pointer-events: none;
+}
+
+/* ── Respect reduced motion ──────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -5,8 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator'
 import { SmoothScroll } from '@/components/motion/smooth-scroll'
 import { RevealSection } from '@/components/home/reveal-section'
+import { StatCounter } from '@/components/home/stat-counter'
+import { ProductPreview } from '@/components/home/product-preview'
+import { HowItWorks } from '@/components/home/how-it-works'
+import { Faq } from '@/components/home/faq'
 import {
-  Trophy, Zap, Users, Layers, BarChart3, Shield,
+  Trophy, Users, Layers, BarChart3, Shield,
   ArrowRight, Check, Star, Dice5, Globe,
 } from 'lucide-react'
 
@@ -43,10 +48,25 @@ const TESTIMONIALS = [
   { name: 'GameDevStudio', handle: '@IndieDev', text: 'Set up a beta access waitlist in under 5 minutes. The embed widget is a game changer.' },
 ]
 
-export default function HomePage() {
+const STATS = [
+  { end: 1200, suffix: '+', label: 'Creators' },
+  { end: 50000, suffix: '+', label: 'Entries drawn' },
+  { end: 5000, suffix: '+', label: 'Forms created' },
+]
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ code?: string; next?: string }>
+}) {
+  const { code, next } = await searchParams
+  if (code) {
+    const nextPath = next ?? '/dashboard'
+    redirect(`/auth/callback?code=${code}&next=${encodeURIComponent(nextPath)}`)
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
-      {/* Lenis smooth scroll — isolated client island, renders nothing */}
       <SmoothScroll />
 
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
@@ -59,9 +79,9 @@ export default function HomePage() {
             DrawVault
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-            <Link href="#features" className="hover:text-foreground transition-colors animate-fade-up delay-100">Features</Link>
-            <Link href="#pricing"  className="hover:text-foreground transition-colors animate-fade-up delay-150">Pricing</Link>
-            <Link href="/login"    className="hover:text-foreground transition-colors animate-fade-up delay-200">Sign in</Link>
+            <Link href="#how-it-works" className="hover:text-foreground transition-colors animate-fade-up delay-100">How it works</Link>
+            <Link href="#features"     className="hover:text-foreground transition-colors animate-fade-up delay-150">Features</Link>
+            <Link href="#pricing"      className="hover:text-foreground transition-colors animate-fade-up delay-200">Pricing</Link>
           </nav>
           <div className="flex items-center gap-2 animate-fade-in delay-300">
             <Link href="/login"><Button variant="ghost" size="sm">Sign in</Button></Link>
@@ -75,15 +95,18 @@ export default function HomePage() {
       </header>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-4xl px-4 pt-28 pb-20 text-center">
-        <div className="animate-fade-up">
+      <section className="relative mx-auto max-w-4xl px-4 pt-28 pb-20 text-center">
+        {/* Subtle glow behind the heading */}
+        <div className="hero-glow absolute inset-x-0 top-0 h-96" aria-hidden />
+
+        <div className="animate-fade-up relative">
           <Badge variant="secondary" className="mb-8 rounded-full px-4 py-1.5 text-xs font-medium gap-2">
             <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
-            Live draws for streamers & companies
+            Live draws for streamers &amp; companies
           </Badge>
         </div>
 
-        <h1 className="text-5xl sm:text-7xl font-semibold tracking-tight leading-[1.08] mb-6 animate-fade-up delay-100">
+        <h1 className="relative text-5xl sm:text-7xl font-semibold tracking-tight leading-[1.08] mb-6 animate-fade-up delay-100">
           Run giveaways your
           <br />
           <span className="text-display text-6xl sm:text-8xl">audience will love</span>
@@ -110,52 +133,31 @@ export default function HomePage() {
         <p className="text-xs text-muted-foreground mt-5 animate-fade-in delay-500">
           No credit card required · Free forever plan
         </p>
+
+        {/* ── Social proof stats ── */}
+        <div className="animate-fade-in delay-700 mt-16 pt-8 border-t flex items-center justify-center gap-8 sm:gap-14">
+          {STATS.map((s) => (
+            <div key={s.label} className="text-center">
+              <p className="text-2xl font-bold tabular-nums">
+                <StatCounter end={s.end} suffix={s.suffix} />
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">{s.label}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
-      {/* ── Dashboard mockup ──────────────────────────────────────────────── */}
+      {/* ── Product preview (tabbed mockup) ─────────────────────────────── */}
       <RevealSection className="mx-auto max-w-4xl px-4 pb-28">
-        <div className="rounded-2xl border bg-card overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/40">
-          {/* Browser chrome */}
-          <div className="flex items-center gap-2 px-4 py-3 bg-muted/50 border-b">
-            <div className="flex gap-1.5">
-              <div className="size-2.5 rounded-full bg-border" />
-              <div className="size-2.5 rounded-full bg-border" />
-              <div className="size-2.5 rounded-full bg-border" />
-            </div>
-            <div className="flex-1 mx-4 rounded-md bg-background border px-3 py-1 text-xs text-muted-foreground text-center">
-              drawvault.site/dashboard
-            </div>
-          </div>
-          {/* Content */}
-          <div className="p-6 grid gap-4">
-            <div className="grid grid-cols-4 gap-3">
-              {[['3', 'Forms'], ['1,247', 'Entries'], ['2', 'Active'], ['5', 'Winners']].map(([n, l]) => (
-                <div key={l} className="rounded-xl border bg-muted/30 p-3 text-center">
-                  <p className="text-lg font-bold">{n}</p>
-                  <p className="text-[11px] text-muted-foreground">{l}</p>
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { name: 'Summer Giveaway 🎉', status: 'active' },
-                { name: 'Early Access Waitlist', status: 'active' },
-                { name: 'Gaming Tournament', status: 'draft' },
-              ].map((form) => (
-                <div key={form.name} className="rounded-xl border overflow-hidden">
-                  <div className={`h-1 ${form.status === 'active' ? 'bg-foreground' : 'bg-muted-foreground/40'}`} />
-                  <div className="p-3">
-                    <p className="text-xs font-medium truncate">{form.name}</p>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full mt-1 inline-block border ${form.status === 'active' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-muted text-muted-foreground border-border'}`}>
-                      {form.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <ProductPreview />
       </RevealSection>
+
+      <Separator />
+
+      {/* ── How it works ─────────────────────────────────────────────────── */}
+      <div id="how-it-works">
+        <HowItWorks />
+      </div>
 
       <Separator />
 
@@ -171,9 +173,9 @@ export default function HomePage() {
             Built for streamers who want drama, and companies who want reliability.
           </p>
         </RevealSection>
-        <RevealSection className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="group">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map((f, i) => (
+            <RevealSection key={f.title} delay={i * 80} className="group">
               <Card className="h-full transition-[box-shadow,transform] duration-200 hover:shadow-md hover:-translate-y-1">
                 <CardHeader className="pb-2">
                   <div className="size-10 rounded-xl bg-muted flex items-center justify-center mb-3 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3">
@@ -185,9 +187,9 @@ export default function HomePage() {
                   <CardDescription className="text-sm leading-relaxed">{f.desc}</CardDescription>
                 </CardContent>
               </Card>
-            </div>
+            </RevealSection>
           ))}
-        </RevealSection>
+        </div>
       </section>
 
       <Separator />
@@ -200,24 +202,26 @@ export default function HomePage() {
             Loved by <span className="text-display text-5xl">creators</span>
           </h2>
         </RevealSection>
-        <RevealSection className="grid gap-4 md:grid-cols-3">
-          {TESTIMONIALS.map((t) => (
-            <Card key={t.handle} className="h-full transition-[box-shadow,transform] duration-200 hover:shadow-md hover:-translate-y-1">
-              <CardContent className="pt-6">
-                <div className="flex mb-4">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="size-4 fill-foreground text-foreground" />
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-5">&ldquo;{t.text}&rdquo;</p>
-                <div>
-                  <p className="text-sm font-semibold">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">{t.handle}</p>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="grid gap-4 md:grid-cols-3">
+          {TESTIMONIALS.map((t, i) => (
+            <RevealSection key={t.handle} delay={i * 100}>
+              <Card className="h-full transition-[box-shadow,transform] duration-200 hover:shadow-md hover:-translate-y-1">
+                <CardContent className="pt-6">
+                  <div className="flex mb-4">
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <Star key={j} className="size-4 fill-foreground text-foreground" />
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-5">&ldquo;{t.text}&rdquo;</p>
+                  <div>
+                    <p className="text-sm font-semibold">{t.name}</p>
+                    <p className="text-xs text-muted-foreground">{t.handle}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </RevealSection>
           ))}
-        </RevealSection>
+        </div>
       </section>
 
       <Separator />
@@ -231,49 +235,55 @@ export default function HomePage() {
           </h2>
           <p className="text-muted-foreground">Start free. Upgrade when you need more.</p>
         </RevealSection>
-        <RevealSection className="grid gap-6 md:grid-cols-3">
-          {PLANS.map((plan) => (
-            <Card
-              key={plan.name}
-              className={`relative flex flex-col h-full transition-[box-shadow,transform] duration-200 hover:shadow-lg hover:-translate-y-1 ${plan.highlight ? 'border-foreground shadow-md' : ''}`}
-            >
-              {plan.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="px-3">Most Popular</Badge>
-                </div>
-              )}
-              <CardHeader>
-                <CardTitle className="text-lg">{plan.name}</CardTitle>
-                <CardDescription>{plan.description}</CardDescription>
-                <div className="flex items-baseline gap-1 pt-2">
-                  <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
-                  <span className="text-sm text-muted-foreground">{plan.period}</span>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-1 flex flex-col gap-5">
-                <ul className="space-y-2.5 flex-1">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2.5 text-sm">
-                      <Check className="size-4 shrink-0" />
-                      <span className="text-muted-foreground">{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link href={plan.href}>
-                  <Button className="w-full rounded-full" variant={plan.highlight ? 'default' : 'outline'}>
-                    {plan.cta}
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+        <div className="grid gap-6 md:grid-cols-3">
+          {PLANS.map((plan, i) => (
+            <RevealSection key={plan.name} delay={i * 100}>
+              <Card
+                className={`relative flex flex-col h-full transition-[box-shadow,transform] duration-200 hover:shadow-lg hover:-translate-y-1 ${plan.highlight ? 'border-foreground shadow-md' : ''}`}
+              >
+                {plan.highlight && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <Badge className="px-3">Most Popular</Badge>
+                  </div>
+                )}
+                <CardHeader>
+                  <CardTitle className="text-lg">{plan.name}</CardTitle>
+                  <CardDescription>{plan.description}</CardDescription>
+                  <div className="flex items-baseline gap-1 pt-2">
+                    <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
+                    <span className="text-sm text-muted-foreground">{plan.period}</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col gap-5">
+                  <ul className="space-y-2.5 flex-1">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-center gap-2.5 text-sm">
+                        <Check className="size-4 shrink-0" />
+                        <span className="text-muted-foreground">{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link href={plan.href}>
+                    <Button className="w-full rounded-full" variant={plan.highlight ? 'default' : 'outline'}>
+                      {plan.cta}
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </RevealSection>
           ))}
-        </RevealSection>
+        </div>
         <RevealSection>
           <p className="text-center text-xs text-muted-foreground mt-8">
             All plans include 14-day money-back guarantee · Cancel anytime
           </p>
         </RevealSection>
       </section>
+
+      <Separator />
+
+      {/* ── FAQ ──────────────────────────────────────────────────────────── */}
+      <Faq />
 
       {/* ── CTA ──────────────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-6xl px-4 pb-28">
@@ -309,9 +319,10 @@ export default function HomePage() {
             DrawVault
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/login"   className="hover:text-foreground transition-colors">Sign in</Link>
-            <Link href="/signup"  className="hover:text-foreground transition-colors">Sign up</Link>
-            <Link href="#pricing" className="hover:text-foreground transition-colors">Pricing</Link>
+            <Link href="#how-it-works" className="hover:text-foreground transition-colors">How it works</Link>
+            <Link href="#features"     className="hover:text-foreground transition-colors">Features</Link>
+            <Link href="#pricing"      className="hover:text-foreground transition-colors">Pricing</Link>
+            <Link href="/login"        className="hover:text-foreground transition-colors">Sign in</Link>
           </div>
           <p>© {new Date().getFullYear()} DrawVault. All rights reserved.</p>
         </div>
