@@ -15,7 +15,7 @@ export const revalidate = 0
 export default async function StreamPage({ params }: Props) {
   const { subdomain } = await params
 
-  const { data: form } = await supabase
+  const { data: form } = await getSupabase()
     .from('forms')
     .select('id, name, accent_color, status, subdomain')
     .eq('subdomain', subdomain)
@@ -29,7 +29,7 @@ export default async function StreamPage({ params }: Props) {
     )
   }
 
-  const { count: entryCount } = await supabase
+  const { count: entryCount } = await getSupabase()
     .from('entries')
     .select('*', { count: 'exact', head: true })
     .eq('form_id', form.id)

@@ -17,7 +17,7 @@ export const revalidate = 60
 export default async function EmbedPage({ params }: Props) {
   const { subdomain } = await params
 
-  const { data: form } = await supabase
+  const { data: form } = await getSupabase()
     .from('forms')
     .select('id, name, description, subdomain, template, draw_theme, accent_color, logo_url, fields, status, max_entries, require_captcha, social_sharing, show_entry_count, winners_page, raffle_type, starts_at, ends_at, embed_enabled')
     .eq('subdomain', subdomain)
@@ -25,7 +25,7 @@ export default async function EmbedPage({ params }: Props) {
 
   if (!form || !form.embed_enabled) notFound()
 
-  const { count: entryCount } = await supabase
+  const { count: entryCount } = await getSupabase()
     .from('entries')
     .select('*', { count: 'exact', head: true })
     .eq('form_id', form.id)

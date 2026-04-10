@@ -17,7 +17,7 @@ export const revalidate = 60
 export default async function WinnersPage({ params }: Props) {
   const { subdomain } = await params
 
-  const { data: form } = await supabase
+  const { data: form } = await getSupabase()
     .from('forms')
     .select('id, name, accent_color, winners_page, logo_url, template')
     .eq('subdomain', subdomain)
@@ -25,13 +25,13 @@ export default async function WinnersPage({ params }: Props) {
 
   if (!form || !form.winners_page) notFound()
 
-  const { data: draws } = await supabase
+  const { data: draws } = await getSupabase()
     .from('draws')
     .select('*')
     .eq('form_id', form.id)
     .order('drawn_at', { ascending: false })
 
-  const { data: winners } = await supabase
+  const { data: winners } = await getSupabase()
     .from('entries')
     .select('*')
     .eq('form_id', form.id)
