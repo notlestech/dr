@@ -1,14 +1,10 @@
-'use client'
-
 import Link from 'next/link'
-import { motion, useScroll, useTransform } from 'motion/react'
-import { useRef, useEffect } from 'react'
-import Lenis from 'lenis'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { FadeIn, Stagger, StaggerItem, ScaleIn, HoverCard } from '@/components/motion'
+import { SmoothScroll } from '@/components/motion/smooth-scroll'
+import { RevealSection } from '@/components/home/reveal-section'
 import {
   Trophy, Zap, Users, Layers, BarChart3, Shield,
   ArrowRight, Check, Star, Dice5, Globe,
@@ -47,151 +43,77 @@ const TESTIMONIALS = [
   { name: 'GameDevStudio', handle: '@IndieDev', text: 'Set up a beta access waitlist in under 5 minutes. The embed widget is a game changer.' },
 ]
 
-const EASE_OUT = [0.16, 1, 0.3, 1] as const
-
 export default function HomePage() {
-  const heroRef = useRef<HTMLDivElement>(null)
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
-
-  // Smooth scroll only on the landing page
-  useEffect(() => {
-    const lenis = new Lenis({ lerp: 0.08, smoothWheel: true })
-    const raf = (time: number) => { lenis.raf(time); requestAnimationFrame(raf) }
-    const id = requestAnimationFrame(raf)
-    return () => { cancelAnimationFrame(id); lenis.destroy() }
-  }, [])
-  const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '20%'])
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0])
-
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+      {/* Lenis smooth scroll — isolated client island, renders nothing */}
+      <SmoothScroll />
+
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
-      <motion.header
-        className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md"
-        initial={{ y: -56, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease: EASE_OUT }}
-      >
+      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md animate-slide-down">
         <div className="mx-auto max-w-6xl px-4 flex h-14 items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-semibold text-sm">
-            <motion.div
-              className="size-6 rounded-md bg-foreground flex items-center justify-center"
-              whileHover={{ rotate: 15, scale: 1.1 }}
-              transition={{ type: 'spring', stiffness: 300 }}
-            >
+            <div className="size-6 rounded-md bg-foreground flex items-center justify-center transition-transform hover:rotate-[15deg] hover:scale-110 duration-200">
               <Trophy className="size-3.5 text-background" />
-            </motion.div>
+            </div>
             DrawVault
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-            {['#features', '#pricing'].map((href, i) => (
-              <motion.div
-                key={href}
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + i * 0.05, ease: EASE_OUT }}
-              >
-                <Link href={href} className="hover:text-foreground transition-colors">
-                  {href === '#features' ? 'Features' : 'Pricing'}
-                </Link>
-              </motion.div>
-            ))}
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, ease: EASE_OUT }}
-            >
-              <Link href="/login" className="hover:text-foreground transition-colors">Sign in</Link>
-            </motion.div>
+            <Link href="#features" className="hover:text-foreground transition-colors animate-fade-up delay-100">Features</Link>
+            <Link href="#pricing"  className="hover:text-foreground transition-colors animate-fade-up delay-150">Pricing</Link>
+            <Link href="/login"    className="hover:text-foreground transition-colors animate-fade-up delay-200">Sign in</Link>
           </nav>
-          <motion.div
-            className="flex items-center gap-2"
-            initial={{ opacity: 0, x: 16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2, ease: EASE_OUT }}
-          >
+          <div className="flex items-center gap-2 animate-fade-in delay-300">
             <Link href="/login"><Button variant="ghost" size="sm">Sign in</Button></Link>
             <Link href="/signup">
               <Button size="sm" className="gap-1.5 rounded-full">
                 Get started <ArrowRight className="size-3" />
               </Button>
             </Link>
-          </motion.div>
+          </div>
         </div>
-      </motion.header>
+      </header>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section ref={heroRef} className="relative mx-auto max-w-4xl px-4 pt-28 pb-20 text-center">
-        <motion.div style={{ y: heroY, opacity: heroOpacity }}>
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, ease: EASE_OUT }}
-          >
-            <Badge variant="secondary" className="mb-8 rounded-full px-4 py-1.5 text-xs font-medium gap-2">
-              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
-              Live draws for streamers & companies
-            </Badge>
-          </motion.div>
+      <section className="mx-auto max-w-4xl px-4 pt-28 pb-20 text-center">
+        <div className="animate-fade-up">
+          <Badge variant="secondary" className="mb-8 rounded-full px-4 py-1.5 text-xs font-medium gap-2">
+            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+            Live draws for streamers & companies
+          </Badge>
+        </div>
 
-          {/* Headline */}
-          <div className="mb-6 overflow-hidden">
-            <motion.h1
-              className="text-5xl sm:text-7xl font-semibold tracking-tight leading-[1.08]"
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.1, ease: EASE_OUT }}
-            >
-              Run giveaways your
-              <br />
-              <span className="text-display text-6xl sm:text-8xl">audience will love</span>
-            </motion.h1>
-          </div>
+        <h1 className="text-5xl sm:text-7xl font-semibold tracking-tight leading-[1.08] mb-6 animate-fade-up delay-100">
+          Run giveaways your
+          <br />
+          <span className="text-display text-6xl sm:text-8xl">audience will love</span>
+        </h1>
 
-          {/* Subtext */}
-          <motion.p
-            className="text-lg text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.25, ease: EASE_OUT }}
-          >
-            Create beautiful entry forms, collect entries in real-time, and draw winners
-            live with a dramatic slot machine animation.
-          </motion.p>
+        <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed animate-fade-up delay-200">
+          Create beautiful entry forms, collect entries in real-time, and draw winners
+          live with a dramatic slot machine animation.
+        </p>
 
-          {/* CTAs */}
-          <motion.div
-            className="flex items-center justify-center gap-3 flex-wrap"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.35, ease: EASE_OUT }}
-          >
-            <Link href="/signup">
-              <Button size="lg" className="h-11 px-8 rounded-full gap-2">
-                Start for free <ArrowRight className="size-4" />
-              </Button>
-            </Link>
-            <Link href="/login">
-              <Button size="lg" variant="outline" className="h-11 px-8 rounded-full">
-                Sign in
-              </Button>
-            </Link>
-          </motion.div>
+        <div className="flex items-center justify-center gap-3 flex-wrap animate-fade-up delay-300">
+          <Link href="/signup">
+            <Button size="lg" className="h-11 px-8 rounded-full gap-2">
+              Start for free <ArrowRight className="size-4" />
+            </Button>
+          </Link>
+          <Link href="/login">
+            <Button size="lg" variant="outline" className="h-11 px-8 rounded-full">
+              Sign in
+            </Button>
+          </Link>
+        </div>
 
-          <motion.p
-            className="text-xs text-muted-foreground mt-5"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            No credit card required · Free forever plan
-          </motion.p>
-        </motion.div>
+        <p className="text-xs text-muted-foreground mt-5 animate-fade-in delay-500">
+          No credit card required · Free forever plan
+        </p>
       </section>
 
       {/* ── Dashboard mockup ──────────────────────────────────────────────── */}
-      <ScaleIn className="mx-auto max-w-4xl px-4 pb-28">
+      <RevealSection className="mx-auto max-w-4xl px-4 pb-28">
         <div className="rounded-2xl border bg-card overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/40">
           {/* Browser chrome */}
           <div className="flex items-center gap-2 px-4 py-3 bg-muted/50 border-b">
@@ -207,18 +129,11 @@ export default function HomePage() {
           {/* Content */}
           <div className="p-6 grid gap-4">
             <div className="grid grid-cols-4 gap-3">
-              {[['3', 'Forms'], ['1,247', 'Entries'], ['2', 'Active'], ['5', 'Winners']].map(([n, l], i) => (
-                <motion.div
-                  key={l}
-                  className="rounded-xl border bg-muted/30 p-3 text-center"
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.1 + i * 0.07, duration: 0.4, ease: EASE_OUT }}
-                >
+              {[['3', 'Forms'], ['1,247', 'Entries'], ['2', 'Active'], ['5', 'Winners']].map(([n, l]) => (
+                <div key={l} className="rounded-xl border bg-muted/30 p-3 text-center">
                   <p className="text-lg font-bold">{n}</p>
                   <p className="text-[11px] text-muted-foreground">{l}</p>
-                </motion.div>
+                </div>
               ))}
             </div>
             <div className="grid grid-cols-3 gap-3">
@@ -226,15 +141,8 @@ export default function HomePage() {
                 { name: 'Summer Giveaway 🎉', status: 'active' },
                 { name: 'Early Access Waitlist', status: 'active' },
                 { name: 'Gaming Tournament', status: 'draft' },
-              ].map((form, i) => (
-                <motion.div
-                  key={form.name}
-                  className="rounded-xl border overflow-hidden"
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.3 + i * 0.07, duration: 0.4, ease: EASE_OUT }}
-                >
+              ].map((form) => (
+                <div key={form.name} className="rounded-xl border overflow-hidden">
                   <div className={`h-1 ${form.status === 'active' ? 'bg-foreground' : 'bg-muted-foreground/40'}`} />
                   <div className="p-3">
                     <p className="text-xs font-medium truncate">{form.name}</p>
@@ -242,18 +150,18 @@ export default function HomePage() {
                       {form.status}
                     </span>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
         </div>
-      </ScaleIn>
+      </RevealSection>
 
       <Separator />
 
       {/* ── Features ─────────────────────────────────────────────────────── */}
       <section id="features" className="mx-auto max-w-6xl px-4 py-28">
-        <FadeIn className="text-center mb-16">
+        <RevealSection className="text-center mb-16">
           <p className="text-sm font-medium text-muted-foreground mb-3 tracking-wider uppercase">Features</p>
           <h2 className="text-4xl font-semibold tracking-tight mb-4">
             Everything to run<br />
@@ -262,160 +170,120 @@ export default function HomePage() {
           <p className="text-muted-foreground max-w-md mx-auto">
             Built for streamers who want drama, and companies who want reliability.
           </p>
-        </FadeIn>
-        <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        </RevealSection>
+        <RevealSection className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f) => (
-            <StaggerItem key={f.title}>
-              <HoverCard>
-                <Card className="h-full transition-shadow hover:shadow-md">
-                  <CardHeader className="pb-2">
-                    <motion.div
-                      className="size-10 rounded-xl bg-muted flex items-center justify-center mb-3"
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      transition={{ type: 'spring', stiffness: 400 }}
-                    >
-                      <f.icon className="size-4" />
-                    </motion.div>
-                    <CardTitle className="text-base font-semibold">{f.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-sm leading-relaxed">{f.desc}</CardDescription>
-                  </CardContent>
-                </Card>
-              </HoverCard>
-            </StaggerItem>
+            <div key={f.title} className="group">
+              <Card className="h-full transition-[box-shadow,transform] duration-200 hover:shadow-md hover:-translate-y-1">
+                <CardHeader className="pb-2">
+                  <div className="size-10 rounded-xl bg-muted flex items-center justify-center mb-3 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3">
+                    <f.icon className="size-4" />
+                  </div>
+                  <CardTitle className="text-base font-semibold">{f.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-sm leading-relaxed">{f.desc}</CardDescription>
+                </CardContent>
+              </Card>
+            </div>
           ))}
-        </Stagger>
+        </RevealSection>
       </section>
 
       <Separator />
 
       {/* ── Testimonials ─────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-6xl px-4 py-28">
-        <FadeIn className="text-center mb-16">
+        <RevealSection className="text-center mb-16">
           <p className="text-sm font-medium text-muted-foreground mb-3 tracking-wider uppercase">Testimonials</p>
           <h2 className="text-4xl font-semibold tracking-tight">
             Loved by <span className="text-display text-5xl">creators</span>
           </h2>
-        </FadeIn>
-        <Stagger className="grid gap-4 md:grid-cols-3">
+        </RevealSection>
+        <RevealSection className="grid gap-4 md:grid-cols-3">
           {TESTIMONIALS.map((t) => (
-            <StaggerItem key={t.handle}>
-              <HoverCard>
-                <Card className="h-full">
-                  <CardContent className="pt-6">
-                    <div className="flex mb-4">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, scale: 0 }}
-                          whileInView={{ opacity: 1, scale: 1 }}
-                          viewport={{ once: true }}
-                          transition={{ delay: 0.1 + i * 0.06, type: 'spring', stiffness: 400 }}
-                        >
-                          <Star className="size-4 fill-foreground text-foreground" />
-                        </motion.div>
-                      ))}
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-5">&ldquo;{t.text}&rdquo;</p>
-                    <div>
-                      <p className="text-sm font-semibold">{t.name}</p>
-                      <p className="text-xs text-muted-foreground">{t.handle}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </HoverCard>
-            </StaggerItem>
+            <Card key={t.handle} className="h-full transition-[box-shadow,transform] duration-200 hover:shadow-md hover:-translate-y-1">
+              <CardContent className="pt-6">
+                <div className="flex mb-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className="size-4 fill-foreground text-foreground" />
+                  ))}
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-5">&ldquo;{t.text}&rdquo;</p>
+                <div>
+                  <p className="text-sm font-semibold">{t.name}</p>
+                  <p className="text-xs text-muted-foreground">{t.handle}</p>
+                </div>
+              </CardContent>
+            </Card>
           ))}
-        </Stagger>
+        </RevealSection>
       </section>
 
       <Separator />
 
       {/* ── Pricing ──────────────────────────────────────────────────────── */}
       <section id="pricing" className="mx-auto max-w-5xl px-4 py-28">
-        <FadeIn className="text-center mb-16">
+        <RevealSection className="text-center mb-16">
           <p className="text-sm font-medium text-muted-foreground mb-3 tracking-wider uppercase">Pricing</p>
           <h2 className="text-4xl font-semibold tracking-tight mb-3">
             Simple, <span className="text-display text-5xl">transparent</span> pricing
           </h2>
           <p className="text-muted-foreground">Start free. Upgrade when you need more.</p>
-        </FadeIn>
-        <Stagger className="grid gap-6 md:grid-cols-3">
+        </RevealSection>
+        <RevealSection className="grid gap-6 md:grid-cols-3">
           {PLANS.map((plan) => (
-            <StaggerItem key={plan.name}>
-              <Card className={`relative flex flex-col h-full transition-shadow hover:shadow-lg ${plan.highlight ? 'border-foreground shadow-md' : ''}`}>
-                {plan.highlight && (
-                  <motion.div
-                    className="absolute -top-3 left-1/2 -translate-x-1/2"
-                    initial={{ opacity: 0, y: -8 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.3 }}
-                  >
-                    <Badge className="px-3">Most Popular</Badge>
-                  </motion.div>
-                )}
-                <CardHeader>
-                  <CardTitle className="text-lg">{plan.name}</CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
-                  <div className="flex items-baseline gap-1 pt-2">
-                    <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
-                    <span className="text-sm text-muted-foreground">{plan.period}</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col gap-5">
-                  <ul className="space-y-2.5 flex-1">
-                    {plan.features.map((f, i) => (
-                      <motion.li
-                        key={f}
-                        className="flex items-center gap-2.5 text-sm"
-                        initial={{ opacity: 0, x: -10 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.1 + i * 0.05 }}
-                      >
-                        <Check className="size-4 shrink-0" />
-                        <span className="text-muted-foreground">{f}</span>
-                      </motion.li>
-                    ))}
-                  </ul>
-                  <Link href={plan.href}>
-                    <Button
-                      className="w-full rounded-full"
-                      variant={plan.highlight ? 'default' : 'outline'}
-                    >
-                      {plan.cta}
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            </StaggerItem>
+            <Card
+              key={plan.name}
+              className={`relative flex flex-col h-full transition-[box-shadow,transform] duration-200 hover:shadow-lg hover:-translate-y-1 ${plan.highlight ? 'border-foreground shadow-md' : ''}`}
+            >
+              {plan.highlight && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <Badge className="px-3">Most Popular</Badge>
+                </div>
+              )}
+              <CardHeader>
+                <CardTitle className="text-lg">{plan.name}</CardTitle>
+                <CardDescription>{plan.description}</CardDescription>
+                <div className="flex items-baseline gap-1 pt-2">
+                  <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
+                  <span className="text-sm text-muted-foreground">{plan.period}</span>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col gap-5">
+                <ul className="space-y-2.5 flex-1">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2.5 text-sm">
+                      <Check className="size-4 shrink-0" />
+                      <span className="text-muted-foreground">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href={plan.href}>
+                  <Button className="w-full rounded-full" variant={plan.highlight ? 'default' : 'outline'}>
+                    {plan.cta}
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
           ))}
-        </Stagger>
-        <FadeIn>
+        </RevealSection>
+        <RevealSection>
           <p className="text-center text-xs text-muted-foreground mt-8">
             All plans include 14-day money-back guarantee · Cancel anytime
           </p>
-        </FadeIn>
+        </RevealSection>
       </section>
 
       {/* ── CTA ──────────────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-6xl px-4 pb-28">
-        <ScaleIn>
+        <RevealSection>
           <Card className="text-center p-14 bg-foreground text-background border-0 overflow-hidden relative">
-            <motion.div
-              className="absolute inset-0 opacity-10"
-              style={{
-                backgroundImage: 'radial-gradient(circle at 30% 50%, white 0%, transparent 60%), radial-gradient(circle at 70% 50%, white 0%, transparent 60%)',
-              }}
+            <div
+              className="absolute inset-0 opacity-10 pointer-events-none"
+              style={{ backgroundImage: 'radial-gradient(circle at 30% 50%, white 0%, transparent 60%), radial-gradient(circle at 70% 50%, white 0%, transparent 60%)' }}
             />
-            <motion.div
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <Trophy className="size-12 mx-auto mb-5 opacity-80" />
-            </motion.div>
+            <Trophy className="size-12 mx-auto mb-5 opacity-80 animate-float" />
             <h2 className="text-3xl font-semibold mb-3 tracking-tight">
               Ready to run your first draw?
             </h2>
@@ -428,7 +296,7 @@ export default function HomePage() {
               </Button>
             </Link>
           </Card>
-        </ScaleIn>
+        </RevealSection>
       </section>
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
@@ -441,8 +309,8 @@ export default function HomePage() {
             DrawVault
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/login" className="hover:text-foreground transition-colors">Sign in</Link>
-            <Link href="/signup" className="hover:text-foreground transition-colors">Sign up</Link>
+            <Link href="/login"   className="hover:text-foreground transition-colors">Sign in</Link>
+            <Link href="/signup"  className="hover:text-foreground transition-colors">Sign up</Link>
             <Link href="#pricing" className="hover:text-foreground transition-colors">Pricing</Link>
           </div>
           <p>© {new Date().getFullYear()} DrawVault. All rights reserved.</p>
