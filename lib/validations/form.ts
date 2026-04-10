@@ -3,7 +3,7 @@ import { RESERVED_SUBDOMAINS } from '@/types/app'
 
 export const fieldSchema = z.object({
   id: z.string(),
-  type: z.enum(['email', 'text', 'phone', 'dropdown', 'checkbox', 'number']),
+  type: z.enum(['email', 'text', 'phone', 'dropdown', 'checkbox', 'number', 'follow_link']),
   label: z.string().min(1, 'Label is required').max(100),
   placeholder: z.string().max(200).optional(),
   required: z.boolean(),
@@ -38,7 +38,7 @@ export const formWizardSchema = z.object({
   show_entry_count: z.boolean(),
   winners_page: z.boolean(),
   require_confirmation: z.boolean(),
-  draw_theme: z.enum(['slot', 'wheel', 'cards', 'dice']),
+  draw_theme: z.enum(['slot', 'wheel', 'cards', 'dice']).default('slot'),
 })
 
 export type FormWizardValues = z.infer<typeof formWizardSchema>

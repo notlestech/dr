@@ -18,7 +18,7 @@ export type FormStatus = 'draft' | 'active' | 'closed'
 
 export type RaffleType = 'giveaway' | 'earlyaccess' | 'contest' | 'internal'
 
-export type FieldType = 'email' | 'text' | 'phone' | 'dropdown' | 'checkbox' | 'number'
+export type FieldType = 'email' | 'text' | 'phone' | 'dropdown' | 'checkbox' | 'number' | 'follow_link'
 
 export interface FormField {
   id: string

@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { SharePanel } from '@/components/shared/share-panel'
+import { BackButton } from '@/components/dashboard/back-button'
+import { FormDetailActions } from '@/components/forms/form-detail-actions'
 import { Users, Trophy, BarChart2, Settings, Dice5, ExternalLink, Clock } from 'lucide-react'
 import { formatNumber, timeAgo } from '@/lib/utils'
 import type { Form } from '@/types/app'
@@ -56,6 +58,8 @@ export default async function FormOverviewPage({ params }: Props) {
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-8">
+      <BackButton href="/forms" label="All forms" />
+
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -71,13 +75,8 @@ export default async function FormOverviewPage({ params }: Props) {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <a href={`/f/${f.subdomain}`} target="_blank" rel="noopener noreferrer">
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <ExternalLink className="w-3.5 h-3.5" />
-              View Form
-            </Button>
-          </a>
+        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+          <FormDetailActions formId={formId} status={f.status} subdomain={f.subdomain} />
           <Link href={`/forms/${formId}/draw`}>
             <Button size="sm" className="gap-1.5">
               <Dice5 className="w-3.5 h-3.5" />

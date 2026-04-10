@@ -1,10 +1,12 @@
 import { redirect } from 'next/navigation'
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Plus, Trophy, Users, Layers, ArrowRight, Dice5, Clock } from 'lucide-react'
 import { formatNumber, timeAgo } from '@/lib/utils'
 import type { Form } from '@/types/app'
+import { UpgradeToast } from '@/components/dashboard/upgrade-toast'
 
 export const metadata = { title: 'Dashboard' }
 
@@ -79,6 +81,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-8 p-6 md:p-10 max-w-2xl mx-auto w-full">
+      <Suspense><UpgradeToast /></Suspense>
 
       {/* Greeting */}
       <div>

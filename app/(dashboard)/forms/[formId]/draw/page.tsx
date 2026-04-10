@@ -11,6 +11,23 @@ export default async function DrawPage({ params }: { params: Promise<{ formId: s
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const { data: membership } = await supabase
+    .from('workspace_members')
+    .select('workspace_id')
+    .eq('user_id', user.id)
+    .single()
+
+  const { data: subscription } = membership
+    ? await supabase
+        .from('subscriptions')
+        .select('status')
+        .eq('workspace_id', membership.workspace_id)
+        .eq('status', 'active')
+        .maybeSingle()
+    : { data: null }
+
+  const isPro = !!subscription
+
   const { data: form } = await supabase
     .from('forms')
     .select('id, name, accent_color, draw_theme, status, subdomain')
@@ -38,6 +55,7 @@ export default async function DrawPage({ params }: { params: Promise<{ formId: s
       form={form}
       entries={formattedEntries}
       userId={user.id}
+      isPro={isPro}
     />
   )
 }

@@ -255,6 +255,15 @@
 .delay-600 { animation-delay: 600ms; }
 .delay-700 { animation-delay: 700ms; }
 
+/* ── Typing cursor blink ─────────────────────────────────────────────────── */
+@keyframes blink {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
 /* ── Slot machine reel ───────────────────────────────────────────────────── */
 @keyframes reel {
   0%   { transform: translateY(0); }
@@ -265,12 +274,47 @@
   will-change: transform;
 }
 
-/* ── Hero background glow ─────────────────────────────────────────────────── */
-.hero-glow {
-  background: radial-gradient(ellipse 90% 55% at 50% 0%,
-    color-mix(in oklch, var(--foreground) 5%, transparent),
-    transparent 75%);
+/* ── Hero dot-grid background (static color, moving pattern) ──────────────── */
+@keyframes dots-pan {
+  0%   { background-position: 0px 0px; }
+  100% { background-position: 28px 28px; }
+}
+.hero-dots {
+  background-image: radial-gradient(
+    circle,
+    oklch(0.141 0.005 285.823 / 0.07) 1px,
+    transparent 1px
+  );
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 80% 90% at 50% 20%, black 20%, transparent 100%);
+  animation: dots-pan 12s linear infinite;
   pointer-events: none;
+}
+.dark .hero-dots {
+  background-image: radial-gradient(
+    circle,
+    oklch(0.958 0.004 286 / 0.055) 1px,
+    transparent 1px
+  );
+}
+
+/* ── Nav link animated underline ──────────────────────────────────────────── */
+.nav-link {
+  position: relative;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 1.5px;
+  width: 0;
+  background: currentColor;
+  border-radius: 1px;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-link:hover::after {
+  width: 100%;
 }
 
 /* ── Respect reduced motion ──────────────────────────────────────────────── */

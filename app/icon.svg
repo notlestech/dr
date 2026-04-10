@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Dark background circle -->
+  <rect width="32" height="32" rx="7" fill="#111111"/>
+  <!-- Trophy cup -->
+  <path d="M9 7 L23 7 L21 16 Q20 19.5 16 20.5 Q12 19.5 11 16 Z" fill="white"/>
+  <!-- Left handle -->
+  <path d="M9 7.5 Q5 7.5 5 11.5 Q5 15 9 15" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <!-- Right handle -->
+  <path d="M23 7.5 Q27 7.5 27 11.5 Q27 15 23 15" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <!-- Stem -->
+  <rect x="14.5" y="20.5" width="3" height="5" rx="0.8" fill="white"/>
+  <!-- Base -->
+  <rect x="11" y="25.5" width="10" height="2.5" rx="1.2" fill="white"/>
+  <!-- Star inside cup -->
+  <path d="M16 10 L17 12.8 L20 12.8 L17.8 14.5 L18.7 17.3 L16 15.6 L13.3 17.3 L14.2 14.5 L12 12.8 L15 12.8 Z" fill="#111111"/>
+</svg>

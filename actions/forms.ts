@@ -1,6 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { formWizardSchema } from '@/lib/validations/form'
 import type { FormWizardValues } from '@/lib/validations/form'
@@ -73,6 +74,8 @@ export async function publishForm(formId: string) {
     .eq('id', formId)
 
   if (error) return { error: error.message }
+  revalidatePath('/forms')
+  revalidatePath(`/forms/${formId}`)
   return { success: true }
 }
 
@@ -80,6 +83,8 @@ export async function closeForm(formId: string) {
   const supabase = await createClient()
   const { error } = await supabase.from('forms').update({ status: 'closed' }).eq('id', formId)
   if (error) return { error: error.message }
+  revalidatePath('/forms')
+  revalidatePath(`/forms/${formId}`)
   return { success: true }
 }
 

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
+import { FormRowActions } from '@/components/forms/form-row-actions'
 import { Plus, Layers, ExternalLink, Dice5, Settings, Clock } from 'lucide-react'
 import { timeAgo } from '@/lib/utils'
 import type { Form } from '@/types/app'
@@ -107,6 +108,7 @@ export default async function FormsPage() {
                 >
                   <Settings className="size-4" />
                 </Link>
+                <FormRowActions formId={form.id} status={form.status} />
               </div>
             </div>
           ))}

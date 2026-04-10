@@ -1,16 +1,25 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { Trophy, Maximize, RotateCcw, Save, Users, Shuffle, Loader2, CheckCircle2 } from 'lucide-react'
+import { Trophy, Maximize, RotateCcw, Save, Users, Shuffle, Loader2, CheckCircle2, ArrowLeft, RotateCw, CreditCard, Dice5, Lock } from 'lucide-react'
 import { formatNumber } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 
 interface Entry { id: string; displayName: string }
 interface Form  { id: string; name: string; accent_color: string; draw_theme: string; status: string; subdomain: string }
-interface Props  { form: Form; entries: Entry[]; userId: string }
+interface Props  { form: Form; entries: Entry[]; userId: string; isPro: boolean }
+
+const DRAW_THEMES = [
+  { id: 'slot',  label: 'Slot',  icon: Shuffle,    free: true  },
+  { id: 'wheel', label: 'Wheel', icon: RotateCw,   free: false },
+  { id: 'cards', label: 'Cards', icon: CreditCard, free: false },
+  { id: 'dice',  label: 'Dice',  icon: Dice5,      free: false },
+] as const
 
 const ITEM_H = 72
 
@@ -23,13 +32,15 @@ function fisherYates<T>(arr: T[]): T[] {
   return a
 }
 
-export function DrawClient({ form, entries: initialEntries, userId }: Props) {
-  const [entries]           = useState(initialEntries)
-  const [phase, setPhase]   = useState<'idle' | 'spinning' | 'revealed' | 'saved'>('idle')
-  const [winner, setWinner] = useState<Entry | null>(null)
-  const [saving, setSaving] = useState(false)
-  const containerRef        = useRef<HTMLDivElement>(null)
-  const accent              = form.accent_color
+export function DrawClient({ form, entries: initialEntries, userId, isPro }: Props) {
+  const router               = useRouter()
+  const [entries]            = useState(initialEntries)
+  const [drawTheme, setDrawTheme] = useState(form.draw_theme ?? 'slot')
+  const [phase, setPhase]    = useState<'idle' | 'spinning' | 'revealed' | 'saved'>('idle')
+  const [winner, setWinner]  = useState<Entry | null>(null)
+  const [saving, setSaving]  = useState(false)
+  const containerRef         = useRef<HTMLDivElement>(null)
+  const accent               = form.accent_color
 
   const [spinKey, setSpinKey]     = useState(0)
   const [reelItems, setReelItems] = useState<Entry[]>([])
@@ -104,12 +115,48 @@ export function DrawClient({ form, entries: initialEntries, userId }: Props) {
 
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b">
-        <div>
-          <h1 className="text-xl font-semibold">{form.name}</h1>
-          <div className="flex items-center gap-2 mt-0.5">
-            <Users className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">{formatNumber(entries.length)} eligible entries</span>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.push(`/forms/${form.id}`)}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors group"
+          >
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+            Back
+          </button>
+          <div className="w-px h-5 bg-border" />
+          <div>
+            <h1 className="text-xl font-semibold">{form.name}</h1>
+            <div className="flex items-center gap-2 mt-0.5">
+              <Users className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">{formatNumber(entries.length)} eligible entries</span>
+            </div>
           </div>
+        </div>
+        <div className="flex items-center gap-1">
+          {DRAW_THEMES.map(theme => {
+            const Icon = theme.icon
+            const locked = !theme.free && !isPro
+            const active = drawTheme === theme.id
+            return (
+              <button
+                key={theme.id}
+                onClick={() => !locked && setDrawTheme(theme.id)}
+                title={locked ? `${theme.label} (Pro)` : theme.label}
+                className={cn(
+                  'relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                  active
+                    ? 'text-white'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                  locked && 'opacity-50 cursor-not-allowed'
+                )}
+                style={active ? { backgroundColor: accent } : undefined}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {theme.label}
+                {locked && <Lock className="w-2.5 h-2.5 absolute -top-1 -right-1" />}
+              </button>
+            )
+          })}
         </div>
         <Button variant="ghost" size="sm" onClick={toggleFullscreen}>
           <Maximize className="w-4 h-4" />

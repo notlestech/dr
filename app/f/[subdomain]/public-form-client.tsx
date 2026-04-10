@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import Script from 'next/script'
 import { createClient } from '@/lib/supabase/client'
 import { FormTemplateRenderer } from '@/components/form-templates'
-import { Lock } from 'lucide-react'
+import { Lock, ExternalLink } from 'lucide-react'
 import type { PublicForm } from '@/types/app'
 
 interface Props {
@@ -117,9 +117,11 @@ export function PublicFormClient({ form, initialEntryCount, embedded }: Props) {
     )
   }
 
+  const followLinks = form.fields.filter(f => f.type === 'follow_link')
+
   return (
     <>
-      {/* Cloudflare Turnstile — invisible managed challenge */}
+      {/* Cloudflare Turnstile — always visible widget */}
       {form.require_captcha && (
         <>
           <Script
@@ -131,9 +133,33 @@ export function PublicFormClient({ form, initialEntryCount, embedded }: Props) {
             data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
             data-callback="__dvTurnstileCallback"
             data-expired-callback="__dvTurnstileExpired"
-            data-appearance="interaction-only"
+            data-appearance="always"
+            data-theme="auto"
           />
         </>
+      )}
+
+      {/* Follow links banner */}
+      {followLinks.length > 0 && (
+        <div className="w-full bg-muted/60 border-b px-4 py-3">
+          <p className="text-xs font-medium text-muted-foreground mb-2 text-center">
+            Follow to participate:
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {followLinks.map(link => (
+              <a
+                key={link.id}
+                href={link.placeholder ?? '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border bg-background hover:bg-muted transition-colors"
+              >
+                <ExternalLink className="size-3" />
+                {link.label || link.placeholder}
+              </a>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Submission error banner */}

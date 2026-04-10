@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="160" height="160">
+  <style>
+    @keyframes i1-float {
+      0%,100% { transform: translateY(0px); }
+      50%      { transform: translateY(-4px); }
+    }
+    @keyframes i1-orbit {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    @keyframes i1-twinkle {
+      0%,100% { opacity: 0.15; transform: scale(0.6); }
+      50%      { opacity: 1;    transform: scale(1.1); }
+    }
+    .i1-body  { animation: i1-float 3s ease-in-out infinite; }
+    .i1-ring  { animation: i1-orbit 7s linear infinite; transform-origin: 40px 40px; }
+    .i1-dot1  { animation: i1-twinkle 2s ease-in-out infinite 0s;    transform-origin: 40px 6px; }
+    .i1-dot2  { animation: i1-twinkle 2s ease-in-out infinite 0.67s; transform-origin: 70px 57px; }
+    .i1-dot3  { animation: i1-twinkle 2s ease-in-out infinite 1.33s; transform-origin: 10px 57px; }
+  </style>
+
+  <!-- Orbit ring: 3 dots evenly spaced, rotate as a group -->
+  <g class="i1-ring">
+    <circle class="i1-dot1" cx="40" cy="6"  r="3" fill="#111"/>
+    <circle class="i1-dot2" cx="70" cy="57" r="2.5" fill="#111"/>
+    <circle class="i1-dot3" cx="10" cy="57" r="2.5" fill="#111"/>
+  </g>
+
+  <!-- Trophy (floats) -->
+  <g class="i1-body">
+    <!-- Cup -->
+    <path d="M22 18 L58 18 L53 36 Q50 44 40 46 Q30 44 27 36 Z" fill="#111"/>
+    <!-- Left handle -->
+    <path d="M22 19 Q11 19 11 28 Q11 37 22 37"
+          stroke="#111" stroke-width="3.5" fill="none"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Right handle -->
+    <path d="M58 19 Q69 19 69 28 Q69 37 58 37"
+          stroke="#111" stroke-width="3.5" fill="none"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Stem -->
+    <rect x="37" y="46" width="6" height="11" rx="1.5" fill="#111"/>
+    <!-- Base -->
+    <rect x="27" y="57" width="26" height="5" rx="2.5" fill="#111"/>
+    <!-- Star inside cup -->
+    <path d="M40 23 L41.9 29 L48 29 L43.2 32.8 L45 38.5 L40 35 L35 38.5 L36.8 32.8 L32 29 L38.1 29 Z"
+          fill="white"/>
+  </g>
+</svg>

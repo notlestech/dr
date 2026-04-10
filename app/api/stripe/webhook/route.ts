@@ -47,6 +47,15 @@ export async function POST(req: NextRequest) {
   }
 
   switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object as Stripe.Checkout.Session
+      if (session.mode === 'subscription' && session.subscription) {
+        const sub = await stripe.subscriptions.retrieve(session.subscription as string)
+        await upsertSubscription(sub)
+      }
+      break
+    }
+
     case 'customer.subscription.created':
     case 'customer.subscription.updated':
       await upsertSubscription(event.data.object as Stripe.Subscription)

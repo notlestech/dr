@@ -3,9 +3,11 @@
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { Lock, Shuffle, RotateCw, CreditCard, Dice5 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Lock, Plus, Trash2, Link2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { FormWizardValues } from '@/lib/validations/form'
+import type { FormField } from '@/types/app'
 
 interface Props {
   values: FormWizardValues
@@ -42,58 +44,32 @@ function SettingRow({
   )
 }
 
-const DRAW_THEMES = [
-  { id: 'slot',  label: 'Slot Machine',   icon: Shuffle,    free: true  },
-  { id: 'wheel', label: 'Spinning Wheel', icon: RotateCw,   free: false },
-  { id: 'cards', label: 'Card Flip',      icon: CreditCard, free: false },
-  { id: 'dice',  label: 'Dice Roll',      icon: Dice5,      free: false },
-] as const
-
 export function StepSettings({ values, update, isPro }: Props) {
+  const followLinks = values.fields.filter(f => f.type === 'follow_link')
+
+  function addFollowLink() {
+    const newField: FormField = {
+      id: `fl_${Date.now()}`,
+      type: 'follow_link',
+      label: '',
+      placeholder: '',
+      required: true,
+    }
+    update({ fields: [...values.fields, newField] })
+  }
+
+  function updateFollowLink(id: string, patch: Partial<FormField>) {
+    update({
+      fields: values.fields.map(f => f.id === id ? { ...f, ...patch } : f),
+    })
+  }
+
+  function removeFollowLink(id: string) {
+    update({ fields: values.fields.filter(f => f.id !== id) })
+  }
+
   return (
     <div className="space-y-8">
-
-      {/* Draw animation */}
-      <div>
-        <Label className="mb-3 block">Draw animation</Label>
-        <div className="grid grid-cols-2 gap-3">
-          {DRAW_THEMES.map(theme => {
-            const locked = !theme.free && !isPro
-            const selected = values.draw_theme === theme.id
-            const Icon = theme.icon
-            return (
-              <button
-                key={theme.id}
-                onClick={() => !locked && update({ draw_theme: theme.id as FormWizardValues['draw_theme'] })}
-                disabled={locked}
-                className={cn(
-                  'flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all',
-                  selected && !locked
-                    ? 'border-foreground bg-foreground/5'
-                    : locked
-                    ? 'border-border opacity-40 cursor-not-allowed'
-                    : 'border-border hover:border-foreground/30 hover:bg-muted/20'
-                )}
-              >
-                <div className={cn(
-                  'size-8 rounded-lg flex items-center justify-center shrink-0',
-                  selected && !locked ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'
-                )}>
-                  <Icon className="size-4" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-medium">{theme.label}</p>
-                  {locked && (
-                    <p className="text-[10px] text-muted-foreground flex items-center gap-0.5 mt-0.5">
-                      <Lock className="size-2.5" /> Pro
-                    </p>
-                  )}
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      </div>
 
       {/* Scheduling */}
       <div>
@@ -178,6 +154,52 @@ export function StepSettings({ values, update, isPro }: Props) {
             />
           </SettingRow>
         </div>
+      </div>
+
+      {/* Links to follow */}
+      <div>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Links to follow</p>
+        <p className="text-xs text-muted-foreground mb-3">
+          Participants will be asked to follow these links before entering.
+        </p>
+
+        <div className="space-y-2">
+          {followLinks.map(link => (
+            <div key={link.id} className="flex items-center gap-2">
+              <div className="size-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                <Link2 className="size-3.5 text-muted-foreground" />
+              </div>
+              <Input
+                placeholder="Platform (e.g. Twitter)"
+                value={link.label}
+                onChange={e => updateFollowLink(link.id, { label: e.target.value })}
+                className="h-8 text-xs w-36 shrink-0"
+              />
+              <Input
+                placeholder="https://twitter.com/yourhandle"
+                value={link.placeholder ?? ''}
+                onChange={e => updateFollowLink(link.id, { placeholder: e.target.value })}
+                className="h-8 text-xs flex-1 min-w-0"
+              />
+              <button
+                onClick={() => removeFollowLink(link.id)}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+              >
+                <Trash2 className="size-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-3 gap-1.5 text-xs h-8"
+          onClick={addFollowLink}
+        >
+          <Plus className="size-3" /> Add link
+        </Button>
       </div>
     </div>
   )
