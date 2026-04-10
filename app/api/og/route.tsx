@@ -4,10 +4,12 @@ import { createClient } from '@supabase/supabase-js'
 
 export const runtime = 'edge'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  )
+}
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -18,6 +20,7 @@ export async function GET(req: NextRequest) {
   let entryCount = 0
 
   if (subdomain) {
+    const supabase = getSupabase()
     const { data: form } = await supabase
       .from('forms')
       .select('name, accent_color')
