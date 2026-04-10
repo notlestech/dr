@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ subdomain
 export default async function PublicFormPage({ params }: { params: Promise<{ subdomain: string }> }) {
   const { subdomain } = await params
 
-  const { data: form } = await supabase
+  const { data: form } = await getSupabase()
     .from('forms')
     .select('id, name, description, subdomain, template, draw_theme, accent_color, logo_url, fields, status, max_entries, require_captcha, social_sharing, show_entry_count, winners_page, raffle_type, starts_at, ends_at')
     .eq('subdomain', subdomain)
@@ -35,7 +35,7 @@ export default async function PublicFormPage({ params }: { params: Promise<{ sub
   if (!form) notFound()
 
   // Get live entry count
-  const { count: entryCount } = await supabase
+  const { count: entryCount } = await getSupabase()
     .from('entries')
     .select('*', { count: 'exact', head: true })
     .eq('form_id', form.id)
