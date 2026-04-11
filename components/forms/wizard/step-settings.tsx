@@ -176,9 +176,16 @@ export function StepSettings({ values, update, isPro }: Props) {
                 className="h-8 text-xs w-36 shrink-0"
               />
               <Input
-                placeholder="https://twitter.com/yourhandle"
+                placeholder="https://x.com/yourhandle"
                 value={link.placeholder ?? ''}
-                onChange={e => updateFollowLink(link.id, { placeholder: e.target.value })}
+                onChange={e => {
+                  let val = e.target.value
+                  // Auto-prepend https:// when user pastes/types a URL without it
+                  if (val && !val.startsWith('http') && val.includes('.')) {
+                    val = 'https://' + val
+                  }
+                  updateFollowLink(link.id, { placeholder: val })
+                }}
                 className="h-8 text-xs flex-1 min-w-0"
               />
               <button

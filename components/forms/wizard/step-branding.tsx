@@ -179,8 +179,8 @@ export function StepBranding({ values, update, isPro }: Props) {
           </>
         ) : (
           <div className="flex items-center rounded-xl border bg-muted/30 px-3 py-2.5 opacity-70">
-            <span className="font-mono text-sm text-muted-foreground flex-1">{values.subdomain || 'auto-generated'}</span>
-            <span className="text-sm text-muted-foreground">.drawvault.site</span>
+            <span className="text-sm text-muted-foreground">drawvault.site/f/</span>
+            <span className="font-mono text-sm text-muted-foreground">{values.subdomain || 'auto-generated'}</span>
           </div>
         )}
 

@@ -117,6 +117,11 @@ export function PublicFormClient({ form, initialEntryCount, embedded }: Props) {
     )
   }
 
+  function normalizeUrl(url: string | null | undefined): string {
+    if (!url) return '#'
+    return /^https?:\/\//i.test(url) ? url : `https://${url}`
+  }
+
   const followLinks = form.fields.filter(f => f.type === 'follow_link')
 
   return (
@@ -149,7 +154,7 @@ export function PublicFormClient({ form, initialEntryCount, embedded }: Props) {
             {followLinks.map(link => (
               <a
                 key={link.id}
-                href={link.placeholder ?? '#'}
+                href={normalizeUrl(link.placeholder)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border bg-background hover:bg-muted transition-colors"

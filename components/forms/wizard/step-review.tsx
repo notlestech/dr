@@ -40,7 +40,7 @@ export function StepReview({ values, isPro }: Props) {
 
   const summaryRows = [
     { label: 'Name',       value: values.name || '—' },
-    { label: 'URL',        value: values.subdomain ? `${values.subdomain}.drawvault.site` : '—', mono: true },
+    { label: 'URL',        value: values.subdomain ? (isPro ? `${values.subdomain}.drawvault.site` : `drawvault.site/f/${values.subdomain}`) : '—', mono: true },
     { label: 'Template',   value: template?.name ?? values.template },
     { label: 'Fields',     value: `${values.fields.length} field${values.fields.length !== 1 ? 's' : ''}` },
     { label: 'Draw style', value: values.draw_theme.charAt(0).toUpperCase() + values.draw_theme.slice(1) },

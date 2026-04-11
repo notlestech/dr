@@ -29,6 +29,17 @@ export default async function FormOverviewPage({ params }: Props) {
 
   const f = form as Form
 
+  // Plan
+  const { data: membership } = await supabase
+    .from('workspace_members')
+    .select('workspace_id')
+    .eq('user_id', user.id)
+    .single()
+  const { data: sub } = membership
+    ? await supabase.from('subscriptions').select('plan').eq('workspace_id', membership.workspace_id).maybeSingle()
+    : { data: null }
+  const isPro = sub?.plan === 'pro' || sub?.plan === 'business'
+
   // Stats
   const { count: totalEntries } = await supabase
     .from('entries').select('*', { count: 'exact', head: true }).eq('form_id', formId)
@@ -76,7 +87,7 @@ export default async function FormOverviewPage({ params }: Props) {
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <FormDetailActions formId={formId} status={f.status} subdomain={f.subdomain} />
+          <FormDetailActions formId={formId} status={f.status} subdomain={f.subdomain} isPro={isPro} />
           <Link href={`/forms/${formId}/draw`}>
             <Button size="sm" className="gap-1.5">
               <Dice5 className="w-3.5 h-3.5" />
@@ -89,7 +100,7 @@ export default async function FormOverviewPage({ params }: Props) {
       {/* Share */}
       <div className="space-y-2">
         <p className="text-sm font-medium text-muted-foreground">Share Link</p>
-        <SharePanel subdomain={f.subdomain} formName={f.name} />
+        <SharePanel subdomain={f.subdomain} formName={f.name} isPro={isPro} />
       </div>
 
       {/* Stats */}

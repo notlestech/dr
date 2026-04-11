@@ -8,11 +8,14 @@ import { toast } from 'sonner'
 interface Props {
   subdomain: string
   formName: string
+  isPro?: boolean
 }
 
-export function SharePanel({ subdomain, formName }: Props) {
+export function SharePanel({ subdomain, formName, isPro }: Props) {
   const [copied, setCopied] = useState(false)
-  const url = `${process.env.NEXT_PUBLIC_APP_URL}/f/${subdomain}`
+  const url = isPro
+    ? `https://${subdomain}.drawvault.site`
+    : `${process.env.NEXT_PUBLIC_APP_URL}/f/${subdomain}`
 
   async function copy() {
     await navigator.clipboard.writeText(url)

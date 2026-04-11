@@ -11,9 +11,10 @@ interface Props {
   formId: string
   status: string
   subdomain: string
+  isPro?: boolean
 }
 
-export function FormDetailActions({ formId, status, subdomain }: Props) {
+export function FormDetailActions({ formId, status, subdomain, isPro }: Props) {
   const router = useRouter()
   const [isPub,   startPub]   = useTransition()
   const [isClose, startClose] = useTransition()
@@ -45,7 +46,7 @@ export function FormDetailActions({ formId, status, subdomain }: Props) {
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <a href={`/f/${subdomain}`} target="_blank" rel="noopener noreferrer">
+      <a href={isPro ? `https://${subdomain}.drawvault.site` : `/f/${subdomain}`} target="_blank" rel="noopener noreferrer">
         <Button variant="outline" size="sm" className="gap-1.5">
           <ExternalLink className="w-3.5 h-3.5" />
           View form
