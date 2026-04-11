@@ -43,18 +43,42 @@ export async function POST(req: NextRequest) {
       ?? null
     const periodEndIso = rawPeriodEnd ? new Date(rawPeriodEnd * 1000).toISOString() : null
 
-    const { error } = await getSupabase().from('subscriptions').upsert({
-      workspace_id: workspaceId,
-      stripe_customer_id: sub.customer as string,
-      stripe_sub_id: sub.id,
-      plan,
-      status: sub.status,
-      current_period_end: periodEndIso,
-      cancel_at_period_end: sub.cancel_at_period_end,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'workspace_id' })
+    const supabase = getSupabase()
 
-    if (error) console.error('[webhook] upsert error:', error.message)
+    // Try UPDATE first — the free plan row already exists for every workspace
+    const { data: existing } = await supabase
+      .from('subscriptions')
+      .select('id')
+      .eq('workspace_id', workspaceId)
+      .maybeSingle()
+
+    if (existing) {
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({
+          stripe_customer_id: sub.customer as string,
+          stripe_sub_id: sub.id,
+          plan,
+          status: sub.status,
+          current_period_end: periodEndIso,
+          cancel_at_period_end: sub.cancel_at_period_end,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('workspace_id', workspaceId)
+      if (error) console.error('[webhook] update error:', error.message)
+    } else {
+      const { error } = await supabase.from('subscriptions').insert({
+        workspace_id: workspaceId,
+        stripe_customer_id: sub.customer as string,
+        stripe_sub_id: sub.id,
+        plan,
+        status: sub.status,
+        current_period_end: periodEndIso,
+        cancel_at_period_end: sub.cancel_at_period_end,
+        updated_at: new Date().toISOString(),
+      })
+      if (error) console.error('[webhook] insert error:', error.message)
+    }
   }
 
   try {

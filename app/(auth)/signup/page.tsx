@@ -1,16 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'motion/react'
+import Script from 'next/script'
 import { createClient } from '@/lib/supabase/client'
 import { sendSignupOtp, resendSignupOtp, verifyOtpAndCreateAccount } from '@/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2, Trophy, Check, X } from 'lucide-react'
+
+declare global {
+  interface Window {
+    __signupTurnstileCb?: (token: string) => void
+    __signupTurnstileExpired?: () => void
+  }
+}
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const
 
@@ -42,6 +50,26 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
 
+  // Turnstile
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+  const tokenRef = useRef<string | null>(null)
+  const [turnstileDone, setTurnstileDone] = useState(false)
+
+  useEffect(() => {
+    window.__signupTurnstileCb = (token: string) => {
+      tokenRef.current = token
+      setTurnstileDone(true)
+    }
+    window.__signupTurnstileExpired = () => {
+      tokenRef.current = null
+      setTurnstileDone(false)
+    }
+    return () => {
+      delete window.__signupTurnstileCb
+      delete window.__signupTurnstileExpired
+    }
+  }, [])
+
   // Verify step state
   const [otpCode, setOtpCode] = useState('')
   const [verifying, setVerifying] = useState(false)
@@ -54,6 +82,28 @@ export default function SignupPage() {
       toast.error('Password does not meet all requirements')
       return
     }
+
+    if (siteKey && !tokenRef.current) {
+      toast.error('Please complete the bot check first')
+      return
+    }
+
+    // Verify Turnstile server-side
+    if (siteKey && tokenRef.current) {
+      const res = await fetch('/api/auth/verify-turnstile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: tokenRef.current }),
+      })
+      const { success } = await res.json()
+      if (!success) {
+        toast.error('Bot check failed — please try again')
+        setTurnstileDone(false)
+        tokenRef.current = null
+        return
+      }
+    }
+
     setLoading(true)
     const result = await sendSignupOtp(email, name)
     setLoading(false)
@@ -191,7 +241,14 @@ export default function SignupPage() {
     )
   }
 
+  const signupBlocked = !!siteKey && !turnstileDone
+
   return (
+    <>
+    <Script
+      src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+      strategy="lazyOnload"
+    />
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <motion.div
         className="w-full max-w-sm space-y-6"
@@ -332,13 +389,25 @@ export default function SignupPage() {
               )}
             </AnimatePresence>
           </div>
+          {/* Turnstile widget */}
+          {siteKey && (
+            <div
+              className="cf-turnstile"
+              data-sitekey={siteKey}
+              data-callback="__signupTurnstileCb"
+              data-expired-callback="__signupTurnstileExpired"
+              data-theme="auto"
+              data-size="normal"
+            />
+          )}
+
           <Button
             type="submit"
             className="w-full rounded-full"
-            disabled={loading || !isPasswordValid(password)}
+            disabled={loading || !isPasswordValid(password) || signupBlocked}
           >
             {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-            Continue
+            {signupBlocked ? 'Complete the check above' : 'Continue'}
           </Button>
         </motion.form>
 
@@ -355,5 +424,6 @@ export default function SignupPage() {
         </motion.p>
       </motion.div>
     </div>
+    </>
   )
 }

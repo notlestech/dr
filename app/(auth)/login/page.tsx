@@ -13,11 +13,9 @@ import { Label } from '@/components/ui/label'
 import { Loader2, Trophy } from 'lucide-react'
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const
-const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
 declare global {
   interface Window {
-    __loginTurnstileToken?: string
     __loginTurnstileCb?: (token: string) => void
     __loginTurnstileExpired?: () => void
   }
@@ -25,22 +23,23 @@ declare global {
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [email, setEmail]               = useState('')
+  const [password, setPassword]         = useState('')
+  const [loading, setLoading]           = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const turnstileTokenRef = useRef<string | null>(null)
-  const [turnstileReady, setTurnstileReady] = useState(!SITE_KEY) // skip if no key configured
+  const [turnstileDone, setTurnstileDone] = useState(false)
+  const tokenRef = useRef<string | null>(null)
+
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
   useEffect(() => {
-    if (!SITE_KEY) return
     window.__loginTurnstileCb = (token: string) => {
-      turnstileTokenRef.current = token
-      setTurnstileReady(true)
+      tokenRef.current = token
+      setTurnstileDone(true)
     }
     window.__loginTurnstileExpired = () => {
-      turnstileTokenRef.current = null
-      setTurnstileReady(false)
+      tokenRef.current = null
+      setTurnstileDone(false)
     }
     return () => {
       delete window.__loginTurnstileCb
@@ -51,21 +50,23 @@ export default function LoginPage() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
 
-    if (SITE_KEY && !turnstileTokenRef.current) {
-      toast.error('Please complete the bot check')
+    if (siteKey && !tokenRef.current) {
+      toast.error('Please complete the bot check first')
       return
     }
 
-    if (SITE_KEY) {
-      // Verify Turnstile server-side before signing in
+    // Verify Turnstile server-side
+    if (siteKey && tokenRef.current) {
       const res = await fetch('/api/auth/verify-turnstile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: turnstileTokenRef.current }),
+        body: JSON.stringify({ token: tokenRef.current }),
       })
       const { success } = await res.json()
       if (!success) {
-        toast.error('Bot check failed. Please try again.')
+        toast.error('Bot check failed — please try again')
+        setTurnstileDone(false)
+        tokenRef.current = null
         return
       }
     }
@@ -91,14 +92,16 @@ export default function LoginPage() {
     })
   }
 
+  const signInBlocked = !!siteKey && !turnstileDone
+
   return (
     <>
-      {SITE_KEY && (
-        <Script
-          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-          strategy="lazyOnload"
-        />
-      )}
+      {/* Cloudflare Turnstile script — same pattern as public forms */}
+      <Script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+        strategy="lazyOnload"
+      />
+
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <motion.div
           className="w-full max-w-sm space-y-6"
@@ -174,7 +177,7 @@ export default function LoginPage() {
             </div>
           </motion.div>
 
-          {/* Email form */}
+          {/* Email / password form */}
           <motion.form
             onSubmit={handleLogin}
             className="space-y-4"
@@ -205,24 +208,27 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* Cloudflare Turnstile */}
-            {SITE_KEY && (
+            {/* Turnstile widget */}
+            {siteKey && (
               <div
                 className="cf-turnstile"
-                data-sitekey={SITE_KEY}
+                data-sitekey={siteKey}
                 data-callback="__loginTurnstileCb"
                 data-expired-callback="__loginTurnstileExpired"
                 data-theme="auto"
+                data-size="normal"
               />
             )}
 
             <Button
               type="submit"
               className="w-full rounded-full"
-              disabled={loading || (!!SITE_KEY && !turnstileReady)}
+              disabled={loading || signInBlocked}
             >
-              {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              Sign in
+              {loading
+                ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                : null}
+              {signInBlocked ? 'Complete the check above' : 'Sign in'}
             </Button>
           </motion.form>
 
