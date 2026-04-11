@@ -12,6 +12,7 @@ import { RevealSection } from '@/components/home/reveal-section'
 import { StatCounter } from '@/components/home/stat-counter'
 import { TypingText } from '@/components/home/typing-text'
 import { LanguageSwitcher } from '@/components/shared/language-switcher'
+import { ThemeToggle } from '@/components/dashboard/theme-toggle'
 
 const ProductPreview = dynamic(
   () => import('@/components/home/product-preview').then(m => m.ProductPreview),
@@ -21,7 +22,7 @@ import { useLocale } from '@/hooks/use-locale'
 import {
   Trophy, Users, Layers, BarChart3, Shield,
   ArrowRight, Check, Star, Dice5, Globe,
-  PenLine, Share2,
+  PenLine, Share2, LayoutDashboard,
 } from 'lucide-react'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -44,7 +45,11 @@ const TESTIMONIALS = [
   { name: 'GameDevStudio',      handle: '@IndieDev',   text: 'Set up a beta access waitlist in under 5 minutes. The embed widget is a game changer.' },
 ]
 
-export function HomeContent() {
+interface Props {
+  isLoggedIn?: boolean
+}
+
+export function HomeContent({ isLoggedIn = false }: Props) {
   const { locale, setLocale, t } = useLocale()
   const [line2Visible, setLine2Visible] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
@@ -56,7 +61,7 @@ export function HomeContent() {
       {/* ── Nav ────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md animate-slide-down">
         <div className="mx-auto max-w-6xl px-4 flex h-14 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-semibold text-sm">
+          <Link href="/" className="flex items-center gap-2 font-semibold text-sm cursor-pointer">
             <div className="size-6 rounded-md bg-foreground flex items-center justify-center transition-transform hover:rotate-[15deg] hover:scale-110 duration-200">
               <Trophy className="size-3.5 text-background" />
             </div>
@@ -64,26 +69,36 @@ export function HomeContent() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-            <Link href="#how-it-works" className="nav-link hover:text-foreground transition-colors">{t.nav.howItWorks}</Link>
-            <Link href="#features"     className="nav-link hover:text-foreground transition-colors">{t.nav.features}</Link>
-            <Link href="#pricing"      className="nav-link hover:text-foreground transition-colors">{t.nav.pricing}</Link>
-            <Link href="/login"        className="nav-link hover:text-foreground transition-colors">{t.nav.signIn}</Link>
+            <Link href="#how-it-works" className="hover:text-foreground transition-colors cursor-pointer">{t.nav.howItWorks}</Link>
+            <Link href="#features"     className="hover:text-foreground transition-colors cursor-pointer">{t.nav.features}</Link>
+            <Link href="#pricing"      className="hover:text-foreground transition-colors cursor-pointer">{t.nav.pricing}</Link>
+            {!isLoggedIn && (
+              <Link href="/login" className="hover:text-foreground transition-colors cursor-pointer">{t.nav.signIn}</Link>
+            )}
           </nav>
 
           <div className="flex items-center gap-2">
             <LanguageSwitcher locale={locale} onSwitch={setLocale} />
-            <Link href="/signup">
-              <Button size="sm" className="gap-1.5 rounded-full">
-                {t.nav.getStarted} <ArrowRight className="size-3" />
-              </Button>
-            </Link>
+            <ThemeToggle />
+            {isLoggedIn ? (
+              <Link href="/dashboard">
+                <Button size="sm" className="gap-1.5 rounded-full cursor-pointer">
+                  <LayoutDashboard className="size-3" /> Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/signup">
+                <Button size="sm" className="gap-1.5 rounded-full cursor-pointer">
+                  {t.nav.getStarted} <ArrowRight className="size-3" />
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </header>
 
       {/* ── Hero ───────────────────────────────────────────────────────── */}
       <section className="relative mx-auto max-w-4xl px-4 pt-28 pb-20 text-center overflow-hidden">
-        {/* Dot-grid background animation (static color, moving pattern) */}
         <div className="hero-dots absolute inset-0" aria-hidden />
 
         <div className="relative animate-fade-up">
@@ -111,16 +126,26 @@ export function HomeContent() {
         </p>
 
         <div className="relative flex items-center justify-center gap-3 flex-wrap animate-fade-up delay-300">
-          <Link href="/signup">
-            <Button size="lg" className="h-11 px-8 rounded-full gap-2">
-              {t.hero.cta} <ArrowRight className="size-4" />
-            </Button>
-          </Link>
-          <Link href="/login">
-            <Button size="lg" variant="outline" className="h-11 px-8 rounded-full">
-              {t.hero.ctaSecondary}
-            </Button>
-          </Link>
+          {isLoggedIn ? (
+            <Link href="/dashboard">
+              <Button size="lg" className="h-11 px-8 rounded-full gap-2 cursor-pointer">
+                <LayoutDashboard className="size-4" /> Go to Dashboard
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/signup">
+                <Button size="lg" className="h-11 px-8 rounded-full gap-2 cursor-pointer">
+                  {t.hero.cta} <ArrowRight className="size-4" />
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button size="lg" variant="outline" className="h-11 px-8 rounded-full cursor-pointer">
+                  {t.hero.ctaSecondary}
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
         <p className="relative text-xs text-muted-foreground mt-5 animate-fade-in delay-500">
@@ -164,12 +189,12 @@ export function HomeContent() {
           {t.howItWorks.steps.map((step, i) => {
             const Icon = HOW_ICONS[i]
             return (
-              <RevealSection key={step.title} delay={i * 120} className="flex flex-col items-center text-center">
+              <RevealSection key={step.title} delay={i * 120} className="flex flex-col items-center text-center group">
                 <div className="relative mb-5 shrink-0">
-                  <div className="size-16 rounded-2xl bg-muted flex items-center justify-center">
-                    <Icon className="size-6" />
+                  <div className="size-16 rounded-2xl bg-muted flex items-center justify-center transition-all duration-300 group-hover:bg-foreground group-hover:text-background group-hover:scale-110 group-hover:rotate-3">
+                    <Icon className="size-6 transition-colors duration-300" />
                   </div>
-                  <span className="absolute -top-2 -right-2 size-6 rounded-full bg-foreground text-background text-[11px] font-bold flex items-center justify-center select-none">
+                  <span className="absolute -top-2 -right-2 size-6 rounded-full bg-foreground text-background text-[11px] font-bold flex items-center justify-center select-none transition-transform duration-300 group-hover:scale-110">
                     {i + 1}
                   </span>
                 </div>
@@ -198,9 +223,9 @@ export function HomeContent() {
             const Icon = FEATURE_ICONS[i]
             return (
               <RevealSection key={f.title} delay={i * 80} className="group">
-                <Card className="h-full transition-[box-shadow,transform] duration-200 hover:shadow-md hover:-translate-y-1">
+                <Card className="h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1.5 hover:border-foreground/20 cursor-default">
                   <CardHeader className="pb-2">
-                    <div className="size-10 rounded-xl bg-muted flex items-center justify-center mb-3 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3">
+                    <div className="size-10 rounded-xl bg-muted flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:bg-foreground group-hover:text-background">
                       <Icon className="size-4" />
                     </div>
                     <CardTitle className="text-base font-semibold">{f.title}</CardTitle>
@@ -229,7 +254,7 @@ export function HomeContent() {
         <div className="grid gap-4 md:grid-cols-3">
           {TESTIMONIALS.map((item, i) => (
             <RevealSection key={item.handle} delay={i * 100}>
-              <Card className="h-full transition-[box-shadow,transform] duration-200 hover:shadow-md hover:-translate-y-1">
+              <Card className="h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1.5 hover:border-foreground/20 cursor-default">
                 <CardContent className="pt-6">
                   <div className="flex mb-4">
                     {Array.from({ length: 5 }).map((_, j) => (
@@ -261,21 +286,24 @@ export function HomeContent() {
           </h2>
           <p className="text-muted-foreground">{t.pricing.subtitle}</p>
         </RevealSection>
-        <div className="grid gap-6 md:grid-cols-3">
+        {/* pt-5 gives space for the -top-3 "Most Popular" badge */}
+        <div className="grid gap-6 md:grid-cols-3 pt-5">
           {t.pricing.plans.map((plan, i) => (
             <RevealSection key={plan.name} delay={i * 100}>
               <Card
                 className={cn(
-                  'relative flex flex-col h-full transition-[box-shadow,transform] duration-200 hover:shadow-lg hover:-translate-y-1',
-                  PLAN_HIGHLIGHT[i] && 'border-foreground shadow-md',
+                  'relative flex flex-col h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-2 cursor-default',
+                  PLAN_HIGHLIGHT[i]
+                    ? 'border-foreground shadow-md hover:border-foreground'
+                    : 'hover:border-foreground/30',
                 )}
               >
                 {PLAN_HIGHLIGHT[i] && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="px-3">Most Popular</Badge>
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10">
+                    <Badge className="px-3 shadow-md">Most Popular</Badge>
                   </div>
                 )}
-                <CardHeader>
+                <CardHeader className={PLAN_HIGHLIGHT[i] ? 'pt-7' : ''}>
                   <CardTitle className="text-lg">{plan.name}</CardTitle>
                   <CardDescription>{plan.description}</CardDescription>
                   <div className="flex items-baseline gap-1 pt-2">
@@ -287,13 +315,13 @@ export function HomeContent() {
                   <ul className="space-y-2.5 flex-1">
                     {PLAN_FEATURES[plan.name as keyof typeof PLAN_FEATURES]?.map((f) => (
                       <li key={f} className="flex items-center gap-2.5 text-sm">
-                        <Check className="size-4 shrink-0" />
+                        <Check className="size-4 shrink-0 text-emerald-500" />
                         <span className="text-muted-foreground">{f}</span>
                       </li>
                     ))}
                   </ul>
-                  <Link href="/signup">
-                    <Button className="w-full rounded-full" variant={PLAN_HIGHLIGHT[i] ? 'default' : 'outline'}>
+                  <Link href={isLoggedIn ? '/upgrade' : '/signup'}>
+                    <Button className="w-full rounded-full cursor-pointer" variant={PLAN_HIGHLIGHT[i] ? 'default' : 'outline'}>
                       {plan.cta}
                     </Button>
                   </Link>
@@ -323,7 +351,7 @@ export function HomeContent() {
             {t.faq.items.map((item, i) => (
               <div key={i}>
                 <button
-                  className="w-full flex items-center justify-between py-4 text-left text-sm font-medium gap-4 hover:text-foreground/80 transition-colors"
+                  className="w-full flex items-center justify-between py-4 text-left text-sm font-medium gap-4 hover:text-foreground/80 transition-colors cursor-pointer"
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   aria-expanded={openFaq === i}
                 >
@@ -352,17 +380,17 @@ export function HomeContent() {
       {/* ── CTA ──────────────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-6xl px-4 pb-28">
         <RevealSection>
-          <Card className="text-center p-14 bg-foreground text-background border-0 overflow-hidden relative">
+          <Card className="text-center p-14 bg-foreground text-background border-0 overflow-hidden relative group cursor-default">
             <div
-              className="absolute inset-0 opacity-10 pointer-events-none"
+              className="absolute inset-0 opacity-10 pointer-events-none transition-opacity duration-500 group-hover:opacity-20"
               style={{ backgroundImage: 'radial-gradient(circle at 30% 50%, white 0%, transparent 60%), radial-gradient(circle at 70% 50%, white 0%, transparent 60%)' }}
             />
-            <Trophy className="size-12 mx-auto mb-5 opacity-80 animate-float" />
+            <Trophy className="size-12 mx-auto mb-5 opacity-80 animate-float transition-transform duration-300 group-hover:scale-110" />
             <h2 className="text-3xl font-semibold mb-3 tracking-tight">{t.cta.title}</h2>
             <p className="text-background/70 mb-8 max-w-md mx-auto leading-relaxed">{t.cta.subtitle}</p>
-            <Link href="/signup">
-              <Button size="lg" variant="secondary" className="rounded-full h-11 px-8 gap-2">
-                {t.cta.button} <ArrowRight className="size-4" />
+            <Link href={isLoggedIn ? '/dashboard' : '/signup'}>
+              <Button size="lg" variant="secondary" className="rounded-full h-11 px-8 gap-2 cursor-pointer hover:scale-105 transition-transform duration-200">
+                {isLoggedIn ? <><LayoutDashboard className="size-4" /> Go to Dashboard</> : <>{t.cta.button} <ArrowRight className="size-4" /></>}
               </Button>
             </Link>
           </Card>
@@ -370,19 +398,19 @@ export function HomeContent() {
       </section>
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <footer className="border-t">
-        <div className="mx-auto max-w-6xl px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+      <footer className="border-t bg-background">
+        <div className="mx-auto max-w-6xl px-4 py-10 flex flex-col sm:flex-row items-center justify-between gap-6 text-sm text-muted-foreground">
           <div className="flex items-center gap-2 font-medium text-foreground">
             <div className="size-5 rounded bg-foreground flex items-center justify-center">
               <Trophy className="size-3 text-background" />
             </div>
             DrawVault
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="#how-it-works" className="nav-link hover:text-foreground transition-colors">{t.footer.howItWorks}</Link>
-            <Link href="#features"     className="nav-link hover:text-foreground transition-colors">{t.footer.features}</Link>
-            <Link href="#pricing"      className="nav-link hover:text-foreground transition-colors">{t.footer.pricing}</Link>
-            <Link href="/login"        className="nav-link hover:text-foreground transition-colors">{t.footer.signIn}</Link>
+          <div className="flex items-center gap-6">
+            <Link href="#how-it-works" className="hover:text-foreground transition-colors cursor-pointer">{t.footer.howItWorks}</Link>
+            <Link href="#features"     className="hover:text-foreground transition-colors cursor-pointer">{t.footer.features}</Link>
+            <Link href="#pricing"      className="hover:text-foreground transition-colors cursor-pointer">{t.footer.pricing}</Link>
+            <Link href="/login"        className="hover:text-foreground transition-colors cursor-pointer">{t.footer.signIn}</Link>
           </div>
           <p>© {new Date().getFullYear()} DrawVault. {t.footer.rights}</p>
         </div>

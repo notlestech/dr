@@ -1,16 +1,24 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
-import { LogOut, CreditCard, User } from 'lucide-react'
+import { LogOut, CreditCard, User, Sparkles, Zap, Crown } from 'lucide-react'
+
+const PLAN_META = {
+  free:     { label: 'Free',     icon: Sparkles, badge: 'bg-muted text-muted-foreground border-border',                        desc: 'You\'re on the Free plan.' },
+  pro:      { label: 'Pro',      icon: Zap,       badge: 'bg-violet-500/15 text-violet-500 border-violet-500/30 font-semibold', desc: 'You\'re on the Pro plan.' },
+  business: { label: 'Business', icon: Crown,      badge: 'bg-amber-500/15 text-amber-600 border-amber-500/30 font-semibold',   desc: 'You\'re on the Business plan.' },
+}
 
 export default function SettingsPage() {
   const supabase = createClient()
@@ -18,21 +26,37 @@ export default function SettingsPage() {
   const [email, setEmail] = useState('')
   const [fullName, setFullName] = useState('')
   const [userId, setUserId] = useState('')
+  const [plan, setPlan] = useState<'free' | 'pro' | 'business'>('free')
   const [saving, setSaving] = useState(false)
   const [billingLoading, setBillingLoading] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push('/login'); return }
       setEmail(user.email ?? '')
       setUserId(user.id)
-      supabase.from('profiles').select('full_name').eq('id', user.id).single().then(({ data }) => {
-        if (data) setFullName(data.full_name ?? '')
-      })
+
+      const [{ data: profile }, { data: membership }] = await Promise.all([
+        supabase.from('profiles').select('full_name').eq('id', user.id).single(),
+        supabase.from('workspace_members').select('workspace_id').eq('user_id', user.id).single(),
+      ])
+      if (profile) setFullName(profile.full_name ?? '')
+      if (membership) {
+        const { data: sub } = await supabase
+          .from('subscriptions')
+          .select('plan')
+          .eq('workspace_id', membership.workspace_id)
+          .maybeSingle()
+        if (sub?.plan) setPlan(sub.plan as 'free' | 'pro' | 'business')
+      }
     })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const initials = (fullName || email || 'U').slice(0, 2).toUpperCase()
+  const planMeta = PLAN_META[plan]
+  const PlanIcon = planMeta.icon
+  const hasBilling = plan !== 'free'
 
   async function saveProfile() {
     setSaving(true)
@@ -55,7 +79,11 @@ export default function SettingsPage() {
       body: JSON.stringify({ returnUrl: window.location.href }),
     })
     const { url, error } = await res.json()
-    if (error) { toast.error(error); setBillingLoading(false); return }
+    if (error) {
+      toast.error('Could not open billing portal. Please try again or contact support.')
+      setBillingLoading(false)
+      return
+    }
     window.location.href = url
   }
 
@@ -85,7 +113,12 @@ export default function SettingsPage() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="text-sm font-medium">{fullName || 'No name set'}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium">{fullName || 'No name set'}</p>
+                <Badge className={`text-[10px] px-1.5 py-0 border ${planMeta.badge}`}>
+                  <PlanIcon className="size-2.5 mr-0.5" />{planMeta.label}
+                </Badge>
+              </div>
               <p className="text-xs text-muted-foreground">{email}</p>
             </div>
           </div>
@@ -125,13 +158,30 @@ export default function SettingsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            View invoices, update your payment method, or cancel your subscription from the billing portal.
-          </p>
-          <Button variant="outline" onClick={openBillingPortal} disabled={billingLoading} className="gap-2">
-            <CreditCard className="size-4" />
-            {billingLoading ? 'Opening...' : 'Open Billing Portal'}
-          </Button>
+          {hasBilling ? (
+            <>
+              <p className="text-sm text-muted-foreground mb-4">
+                View invoices, update your payment method, or cancel your subscription from the billing portal.
+              </p>
+              <Button variant="outline" onClick={openBillingPortal} disabled={billingLoading} className="gap-2">
+                <CreditCard className="size-4" />
+                {billingLoading ? 'Opening...' : 'Open Billing Portal'}
+              </Button>
+            </>
+          ) : (
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  You&apos;re on the <strong>Free plan</strong>. Upgrade to Pro or Business to unlock unlimited forms, all templates, analytics, and more.
+                </p>
+              </div>
+              <Link href="/upgrade">
+                <Button size="sm" className="gap-1.5 shrink-0">
+                  <Zap className="size-3.5" /> Upgrade
+                </Button>
+              </Link>
+            </div>
+          )}
         </CardContent>
       </Card>
 

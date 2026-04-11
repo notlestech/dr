@@ -31,10 +31,10 @@ const NAV_SECONDARY = [
   { title: 'Upgrade', url: '/upgrade', icon: Sparkles },
 ]
 
-const PLAN_BADGE: Record<Plan, { label: string; className: string }> = {
-  free:     { label: 'Free',     className: 'bg-muted text-muted-foreground border-border' },
-  pro:      { label: 'Pro',      className: 'bg-foreground/10 text-foreground border-foreground/20' },
-  business: { label: 'Business', className: 'bg-foreground/10 text-foreground border-foreground/20' },
+const PLAN_BADGE: Record<Plan, { label: string; className: string; headerClass: string }> = {
+  free:     { label: 'Free',     className: 'bg-muted text-muted-foreground border-border',                        headerClass: '' },
+  pro:      { label: 'Pro',      className: 'bg-violet-500/15 text-violet-500 border-violet-500/30 font-semibold', headerClass: 'border-b border-violet-500/20' },
+  business: { label: 'Business', className: 'bg-amber-500/15 text-amber-600 border-amber-500/30 font-semibold',    headerClass: 'border-b border-amber-500/20' },
 }
 
 interface Props {
@@ -58,7 +58,7 @@ export function AppSidebar({ workspace, plan, userEmail, userName }: Props) {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
+      <SidebarHeader className={planInfo.headerClass}>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link href="/dashboard" />}>

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import { HomeContent } from '@/components/home/home-content'
 
 export default async function HomePage({
@@ -12,5 +13,8 @@ export default async function HomePage({
     redirect(`/auth/callback?code=${code}&next=${encodeURIComponent(nextPath)}`)
   }
 
-  return <HomeContent />
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  return <HomeContent isLoggedIn={!!user} />
 }
