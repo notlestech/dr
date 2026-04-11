@@ -4,44 +4,110 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { motion } from 'motion/react'
+import { motion, AnimatePresence } from 'motion/react'
 import { createClient } from '@/lib/supabase/client'
+import { sendSignupOtp, resendSignupOtp, verifyOtpAndCreateAccount } from '@/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, Trophy } from 'lucide-react'
+import { Loader2, Trophy, Check, X } from 'lucide-react'
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const
 
+interface PasswordRule {
+  label: string
+  test: (p: string) => boolean
+}
+
+const PASSWORD_RULES: PasswordRule[] = [
+  { label: 'At least 8 characters', test: p => p.length >= 8 },
+  { label: 'At least one uppercase letter', test: p => /[A-Z]/.test(p) },
+  { label: 'At least one number', test: p => /\d/.test(p) },
+  { label: 'At least one special character', test: p => /[^A-Za-z0-9]/.test(p) },
+]
+
+function isPasswordValid(p: string) {
+  return PASSWORD_RULES.every(r => r.test(p))
+}
+
 export default function SignupPage() {
   const router = useRouter()
+  const [step, setStep] = useState<'form' | 'verify'>('form')
+
+  // Form step state
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showRules, setShowRules] = useState(false)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
 
+  // Verify step state
+  const [otpCode, setOtpCode] = useState('')
+  const [verifying, setVerifying] = useState(false)
+  const [resending, setResending] = useState(false)
+  const [resendCooldown, setResendCooldown] = useState(0)
+
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
-    if (password.length < 8) {
-      toast.error('Password must be at least 8 characters')
+    if (!isPasswordValid(password)) {
+      toast.error('Password does not meet all requirements')
       return
     }
     setLoading(true)
-    const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: name } },
-    })
-    if (error) {
-      toast.error(error.message)
-      setLoading(false)
+    const result = await sendSignupOtp(email, name)
+    setLoading(false)
+    if (result.error) {
+      toast.error(result.error)
       return
     }
-    toast.success('Account created! Redirecting...')
+    setStep('verify')
+  }
+
+  async function handleVerify(e: React.FormEvent) {
+    e.preventDefault()
+    if (otpCode.length !== 6) {
+      toast.error('Please enter the 6-digit code')
+      return
+    }
+    setVerifying(true)
+    const result = await verifyOtpAndCreateAccount(email, otpCode, password, name)
+    if (result.error) {
+      toast.error(result.error)
+      setVerifying(false)
+      return
+    }
+    // Sign in now that account is created
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) {
+      toast.error('Account created but sign-in failed. Please log in manually.')
+      router.push('/login')
+      return
+    }
+    toast.success('Welcome to DrawVault!')
     router.push('/dashboard')
     router.refresh()
+  }
+
+  async function handleResend() {
+    if (resendCooldown > 0) return
+    setResending(true)
+    const result = await resendSignupOtp(email, name)
+    setResending(false)
+    if (result.error) {
+      toast.error(result.error)
+      return
+    }
+    toast.success('New code sent — check your inbox')
+    // 60-second cooldown
+    setResendCooldown(60)
+    const interval = setInterval(() => {
+      setResendCooldown(c => {
+        if (c <= 1) { clearInterval(interval); return 0 }
+        return c - 1
+      })
+    }, 1000)
   }
 
   async function handleGoogle() {
@@ -51,6 +117,78 @@ export default function SignupPage() {
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
+  }
+
+  if (step === 'verify') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <motion.div
+          className="w-full max-w-sm space-y-6"
+          initial={{ opacity: 0, y: 32 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: EASE_OUT }}
+        >
+          <div className="text-center space-y-3">
+            <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-foreground text-background mb-2">
+              <Trophy className="size-5" />
+            </div>
+            <h1 className="text-2xl font-semibold tracking-tight">Check your inbox</h1>
+            <p className="text-sm text-muted-foreground">
+              We sent a 6-digit code to <span className="font-medium text-foreground">{email}</span>
+            </p>
+          </div>
+
+          <form onSubmit={handleVerify} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="code">Verification code</Label>
+              <Input
+                id="code"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                placeholder="123456"
+                value={otpCode}
+                onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                className="text-center text-2xl tracking-[0.4em] font-mono h-14"
+                autoFocus
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full rounded-full" disabled={verifying || otpCode.length !== 6}>
+              {verifying ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Verify & create account
+            </Button>
+          </form>
+
+          <div className="text-center space-y-2">
+            <p className="text-sm text-muted-foreground">Didn&apos;t get the email?</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleResend}
+              disabled={resending || resendCooldown > 0}
+            >
+              {resending
+                ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Sending…</>
+                : resendCooldown > 0
+                ? `Resend in ${resendCooldown}s`
+                : 'Resend code'}
+            </Button>
+          </div>
+
+          <p className="text-center text-sm text-muted-foreground">
+            <button
+              type="button"
+              onClick={() => setStep('form')}
+              className="font-medium text-foreground underline underline-offset-4 hover:no-underline"
+            >
+              ← Back to sign up
+            </button>
+          </p>
+        </motion.div>
+      </div>
+    )
   }
 
   return (
@@ -161,16 +299,46 @@ export default function SignupPage() {
             <Input
               id="password"
               type="password"
-              placeholder="Min. 8 characters"
+              placeholder="Create a strong password"
               value={password}
               onChange={e => setPassword(e.target.value)}
+              onFocus={() => setShowRules(true)}
               required
-              minLength={8}
             />
+            {/* Live password requirements */}
+            <AnimatePresence>
+              {showRules && (
+                <motion.ul
+                  className="space-y-1.5 pt-1"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {PASSWORD_RULES.map(rule => {
+                    const passed = rule.test(password)
+                    return (
+                      <li key={rule.label} className="flex items-center gap-2 text-xs">
+                        {passed
+                          ? <Check className="size-3.5 text-emerald-500 shrink-0" />
+                          : <X className="size-3.5 text-muted-foreground shrink-0" />}
+                        <span className={passed ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}>
+                          {rule.label}
+                        </span>
+                      </li>
+                    )
+                  })}
+                </motion.ul>
+              )}
+            </AnimatePresence>
           </div>
-          <Button type="submit" className="w-full rounded-full" disabled={loading}>
+          <Button
+            type="submit"
+            className="w-full rounded-full"
+            disabled={loading || !isPasswordValid(password)}
+          >
             {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-            Create free account
+            Continue
           </Button>
         </motion.form>
 

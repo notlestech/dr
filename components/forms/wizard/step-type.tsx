@@ -43,9 +43,11 @@ const RAFFLE_TYPES = [
 export function StepType({ values, update }: Props) {
   function selectType(type: FormWizardValues['raffle_type']) {
     const preset = RAFFLE_TYPE_PRESETS[type]
+    const newName = values.name || preset.name
     update({
       raffle_type: type,
-      name: values.name || preset.name,
+      name: newName,
+      subdomain: values.subdomain || generateSubdomain(newName),
       description: values.description || preset.description,
       fields: preset.fields.map(f => ({ ...f, id: `${f.id}_${Date.now()}` })),
     })

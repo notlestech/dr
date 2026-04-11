@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/sidebar'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -144,13 +144,6 @@ export function AppSidebar({ workspace, plan, userEmail, userName }: Props) {
                 }
               />
               <DropdownMenuContent side="top" align="end" className="w-56">
-                <DropdownMenuItem render={<Link href="/settings" />}>
-                  <Settings className="mr-2 size-4" /> Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem render={<Link href="/upgrade" />}>
-                  <Sparkles className="mr-2 size-4" /> Upgrade
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut} variant="destructive">
                   <LogOut className="mr-2 size-4" /> Sign Out
                 </DropdownMenuItem>

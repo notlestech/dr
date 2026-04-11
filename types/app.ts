@@ -26,7 +26,8 @@ export interface FormField {
   label: string
   placeholder?: string
   required: boolean
-  options?: string[] // for dropdown
+  options?: string[]    // for dropdown
+  phoneCountry?: string // for phone: ISO-2 code to restrict to one country (e.g. 'US')
 }
 
 export interface Profile {

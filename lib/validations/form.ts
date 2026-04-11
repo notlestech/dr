@@ -8,6 +8,7 @@ export const fieldSchema = z.object({
   placeholder: z.string().max(200).optional(),
   required: z.boolean(),
   options: z.array(z.string()).optional(),
+  phoneCountry: z.string().length(2).optional(), // ISO-2 country code
 })
 
 export const formWizardSchema = z.object({

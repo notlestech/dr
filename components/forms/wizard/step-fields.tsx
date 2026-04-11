@@ -122,6 +122,59 @@ function SortableField({
               />
             </div>
           )}
+
+          {/* Phone country restriction */}
+          {field.type === 'phone' && (
+            <div>
+              <Label className="text-muted-foreground text-xs mb-1 block">Restrict to country</Label>
+              <select
+                value={field.phoneCountry ?? ''}
+                onChange={e => onUpdate({ phoneCountry: e.target.value || undefined })}
+                className="w-full bg-background border border-input rounded-lg text-foreground text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">All countries (user chooses)</option>
+                <option value="US">United States (+1)</option>
+                <option value="CA">Canada (+1)</option>
+                <option value="GB">United Kingdom (+44)</option>
+                <option value="AU">Australia (+61)</option>
+                <option value="NZ">New Zealand (+64)</option>
+                <option value="IE">Ireland (+353)</option>
+                <option value="DE">Germany (+49)</option>
+                <option value="FR">France (+33)</option>
+                <option value="ES">Spain (+34)</option>
+                <option value="IT">Italy (+39)</option>
+                <option value="NL">Netherlands (+31)</option>
+                <option value="BE">Belgium (+32)</option>
+                <option value="CH">Switzerland (+41)</option>
+                <option value="AT">Austria (+43)</option>
+                <option value="SE">Sweden (+46)</option>
+                <option value="NO">Norway (+47)</option>
+                <option value="DK">Denmark (+45)</option>
+                <option value="FI">Finland (+358)</option>
+                <option value="PL">Poland (+48)</option>
+                <option value="PT">Portugal (+351)</option>
+                <option value="MX">Mexico (+52)</option>
+                <option value="BR">Brazil (+55)</option>
+                <option value="AR">Argentina (+54)</option>
+                <option value="CO">Colombia (+57)</option>
+                <option value="JP">Japan (+81)</option>
+                <option value="CN">China (+86)</option>
+                <option value="IN">India (+91)</option>
+                <option value="KR">South Korea (+82)</option>
+                <option value="SG">Singapore (+65)</option>
+                <option value="HK">Hong Kong (+852)</option>
+                <option value="AE">UAE (+971)</option>
+                <option value="SA">Saudi Arabia (+966)</option>
+                <option value="TR">Turkey (+90)</option>
+                <option value="ZA">South Africa (+27)</option>
+                <option value="NG">Nigeria (+234)</option>
+                <option value="EG">Egypt (+20)</option>
+                <option value="RU">Russia (+7)</option>
+                <option value="UA">Ukraine (+380)</option>
+                <option value="GR">Greece (+30)</option>
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Required toggle + delete */}
