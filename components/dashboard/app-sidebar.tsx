@@ -31,10 +31,10 @@ const NAV_SECONDARY = [
   { title: 'Upgrade', url: '/upgrade', icon: Sparkles },
 ]
 
-const PLAN_BADGE: Record<Plan, { label: string; className: string; headerClass: string }> = {
-  free:     { label: 'Free',     className: 'bg-muted text-muted-foreground border-border',                        headerClass: '' },
-  pro:      { label: 'Pro',      className: 'bg-violet-500/15 text-violet-500 border-violet-500/30 font-semibold', headerClass: 'border-b border-violet-500/20' },
-  business: { label: 'Business', className: 'bg-amber-500/15 text-amber-600 border-amber-500/30 font-semibold',    headerClass: 'border-b border-amber-500/20' },
+const PLAN_BADGE: Record<Plan, { label: string; className: string; headerClass: string; nameClass: string }> = {
+  free:     { label: 'Free',     className: 'bg-muted text-muted-foreground border-border',                        headerClass: '',                              nameClass: '' },
+  pro:      { label: 'Pro',      className: 'bg-violet-500/15 text-violet-500 border-violet-500/30 font-semibold', headerClass: 'border-b border-violet-500/20', nameClass: 'text-violet-500' },
+  business: { label: 'Business', className: 'bg-amber-500/15 text-amber-600 border-amber-500/30 font-semibold',    headerClass: 'border-b border-amber-500/20',  nameClass: 'text-amber-500' },
 }
 
 interface Props {
@@ -133,7 +133,7 @@ export function AppSidebar({ workspace, plan, userEmail, userName }: Props) {
                       </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-medium">{userName || 'My Account'}</span>
+                      <span className={`truncate font-medium ${planInfo.nameClass}`}>{userName || 'My Account'}</span>
                       <span className="truncate text-xs text-muted-foreground">{userEmail}</span>
                     </div>
                     <Badge className={`text-[10px] border px-1.5 py-0 ml-auto shrink-0 ${planInfo.className}`}>

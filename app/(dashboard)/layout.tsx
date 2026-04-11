@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { AppSidebar } from '@/components/dashboard/app-sidebar'
 import { MobileNav } from '@/components/dashboard/mobile-nav'
 import { ThemeToggle } from '@/components/dashboard/theme-toggle'
+import { PlanAccentBg } from '@/components/dashboard/plan-accent-bg'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -49,6 +50,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <SidebarProvider>
+      <PlanAccentBg plan={plan} />
       <AppSidebar
         workspace={workspace}
         plan={plan}
