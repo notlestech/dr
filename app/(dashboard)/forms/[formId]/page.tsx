@@ -61,7 +61,7 @@ export default async function FormOverviewPage({ params }: Props) {
       <BackButton href="/forms" label="All forms" />
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <h1 className="text-2xl font-semibold tracking-tight">{f.name}</h1>
@@ -75,7 +75,7 @@ export default async function FormOverviewPage({ params }: Props) {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+        <div className="flex items-center gap-2 flex-wrap">
           <FormDetailActions formId={formId} status={f.status} subdomain={f.subdomain} />
           <Link href={`/forms/${formId}/draw`}>
             <Button size="sm" className="gap-1.5">
@@ -93,7 +93,7 @@ export default async function FormOverviewPage({ params }: Props) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-3">
         {stats.map(({ label, value, icon: Icon }) => (
           <div key={label} className="border rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">

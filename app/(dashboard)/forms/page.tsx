@@ -83,8 +83,8 @@ export default async function FormsPage() {
                 </p>
               </Link>
 
-              {/* Actions — visible on hover */}
-              <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* Actions — always visible on touch, hover on desktop */}
+              <div className="flex items-center gap-0.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                 <a
                   href={`/f/${form.subdomain}`}
                   target="_blank"

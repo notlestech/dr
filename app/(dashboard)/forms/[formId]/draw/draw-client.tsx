@@ -114,8 +114,8 @@ export function DrawClient({ form, entries: initialEntries, userId, isPro }: Pro
     <div ref={containerRef} className="min-h-screen bg-background flex flex-col">
 
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-6 border-b">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => router.push(`/forms/${form.id}`)}
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors group"
@@ -125,10 +125,10 @@ export function DrawClient({ form, entries: initialEntries, userId, isPro }: Pro
           </button>
           <div className="w-px h-5 bg-border" />
           <div>
-            <h1 className="text-xl font-semibold">{form.name}</h1>
-            <div className="flex items-center gap-2 mt-0.5">
-              <Users className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">{formatNumber(entries.length)} eligible entries</span>
+            <h1 className="text-base sm:text-xl font-semibold leading-tight">{form.name}</h1>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <Users className="w-3 h-3 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">{formatNumber(entries.length)} entries</span>
             </div>
           </div>
         </div>
@@ -152,7 +152,7 @@ export function DrawClient({ form, entries: initialEntries, userId, isPro }: Pro
                 style={active ? { backgroundColor: accent } : undefined}
               >
                 <Icon className="w-3.5 h-3.5" />
-                {theme.label}
+                <span className="hidden sm:inline">{theme.label}</span>
                 {locked && <Lock className="w-2.5 h-2.5 absolute -top-1 -right-1" />}
               </button>
             )
