@@ -66,11 +66,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
-  }
+  // NOTE: do NOT redirect logged-in users away from /login here.
+  // The dashboard layout redirects to /login when workspace data is missing,
+  // and redirecting them back to /dashboard from the proxy creates an infinite
+  // redirect loop. The login page handles the already-logged-in case itself.
 
   return supabaseResponse
 }

@@ -51,6 +51,14 @@ export default function SignupPage() {
   const [loading, setLoading]           = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
 
+  // Redirect already-logged-in users to dashboard
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace('/dashboard')
+    })
+  }, [router])
+
   // Turnstile
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
   const tokenRef = useRef<string | null>(null)

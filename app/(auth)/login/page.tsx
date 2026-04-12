@@ -33,6 +33,14 @@ export default function LoginPage() {
 
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
+  // Redirect already-logged-in users to dashboard
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace('/dashboard')
+    })
+  }, [router])
+
   useEffect(() => {
     window.__loginTurnstileCb = (token: string) => {
       tokenRef.current = token
