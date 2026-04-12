@@ -11,7 +11,8 @@ import { UpgradeToast } from '@/components/dashboard/upgrade-toast'
 interface RecentDraw {
   id: string
   drawn_at: string
-  forms: { name: string; accent_color: string } | null
+  // Supabase returns a one-to-many join as an array; we take the first element
+  forms: { name: string; accent_color: string }[] | null
 }
 
 export const metadata = { title: 'Dashboard' }
@@ -238,18 +239,21 @@ export default async function DashboardPage() {
         <div className="space-y-3">
           <p className="text-sm font-medium">Recent draws</p>
           <div className="divide-y border rounded-xl overflow-hidden">
-            {recentDraws.map(draw => (
-              <div key={draw.id} className="flex items-center gap-3 px-4 py-3">
-                <div
-                  className="size-6 rounded-full flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: (draw.forms?.accent_color ?? '#000') + '20', color: draw.forms?.accent_color }}
-                >
-                  <Trophy className="size-3" />
+            {recentDraws.map(draw => {
+              const form = Array.isArray(draw.forms) ? draw.forms[0] : draw.forms
+              return (
+                <div key={draw.id} className="flex items-center gap-3 px-4 py-3">
+                  <div
+                    className="size-6 rounded-full flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: (form?.accent_color ?? '#000') + '20', color: form?.accent_color }}
+                  >
+                    <Trophy className="size-3" />
+                  </div>
+                  <span className="text-sm flex-1 min-w-0 truncate">{form?.name ?? 'Unknown form'}</span>
+                  <span className="text-xs text-muted-foreground shrink-0">{timeAgo(draw.drawn_at)}</span>
                 </div>
-                <span className="text-sm flex-1 min-w-0 truncate">{draw.forms?.name ?? 'Unknown form'}</span>
-                <span className="text-xs text-muted-foreground shrink-0">{timeAgo(draw.drawn_at)}</span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
