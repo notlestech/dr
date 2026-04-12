@@ -44,12 +44,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect('/login')
 
   const data = await getLayoutData(user.id)
-  if (!data) {
-    // Auth account exists but workspace record is missing — sign out so the
-    // login page doesn't loop back here, then let the user re-authenticate.
-    await supabase.auth.signOut()
-    redirect('/login')
-  }
+  if (!data) redirect('/login')
 
   const { workspace, plan, fullName } = data
 

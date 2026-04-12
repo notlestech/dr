@@ -69,7 +69,7 @@ export async function verifyOtpAndCreateAccount(
   await supabase.from('otp_codes').update({ used: true }).eq('email', email)
 
   // Create confirmed user via admin API
-  const { error: createError } = await supabase.auth.admin.createUser({
+  const { data: created, error: createError } = await supabase.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
@@ -81,6 +81,46 @@ export async function verifyOtpAndCreateAccount(
       return { error: 'An account with this email already exists.' }
     }
     return { error: createError.message }
+  }
+
+  const userId = created.user.id
+
+  // Provision workspace, profile, and free subscription
+  const workspaceName = fullName ? `${fullName.split(' ')[0]}'s Workspace` : 'My Workspace'
+  const workspaceSlug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-')
+
+  const { data: workspace, error: wsError } = await supabase
+    .from('workspaces')
+    .insert({ name: workspaceName, slug: workspaceSlug })
+    .select('id')
+    .single()
+
+  if (wsError || !workspace) {
+    // Clean up the created auth user so the user can retry
+    await supabase.auth.admin.deleteUser(userId)
+    return { error: 'Failed to create workspace. Please try again.' }
+  }
+
+  // Create workspace member, profile, and free subscription in parallel
+  const [memberRes, profileRes] = await Promise.all([
+    supabase.from('workspace_members').insert({
+      workspace_id: workspace.id,
+      user_id: userId,
+      role: 'owner',
+    }),
+    supabase.from('profiles').insert({
+      id: userId,
+      full_name: fullName,
+    }),
+    supabase.from('subscriptions').insert({
+      workspace_id: workspace.id,
+      plan: 'free',
+    }),
+  ])
+
+  if (memberRes.error || profileRes.error) {
+    await supabase.auth.admin.deleteUser(userId)
+    return { error: 'Failed to set up account. Please try again.' }
   }
 
   return {}
