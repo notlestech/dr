@@ -11,8 +11,10 @@ export type FormTemplate =
   | 'split'
   | 'arcade'
   | 'conversational'
+  | 'terminal'
+  | 'holographic'
 
-export type DrawTheme = 'slot' | 'wheel' | 'cards' | 'dice'
+export type DrawTheme = 'slot' | 'wheel' | 'cards' | 'dice' | 'spotlight'
 
 export type FormStatus = 'draft' | 'active' | 'closed'
 
@@ -168,6 +170,8 @@ export const FORM_TEMPLATES: FormTemplateInfo[] = [
   { id: 'split',          name: 'Split',          description: 'Two-column magazine layout',                 tier: 'pro',  tags: ['editorial', 'brand', 'campaign'] },
   { id: 'arcade',         name: 'Arcade',         description: 'Retro synthwave with pixel fonts',           tier: 'pro',  tags: ['retro', 'gaming', '80s'] },
   { id: 'conversational', name: 'Conversational', description: 'One question at a time like Typeform',       tier: 'pro',  tags: ['interactive', 'engagement'] },
+  { id: 'terminal',       name: 'Terminal',       description: 'Hacker terminal aesthetic, dark & monospace', tier: 'pro',  tags: ['dark', 'developer', 'hacker'] },
+  { id: 'holographic',    name: 'Holographic',    description: 'Iridescent premium with animated shimmer',   tier: 'pro',  tags: ['premium', 'modern', 'luxury'] },
 ]
 
 export const PLAN_LIMITS: Record<Plan, {
@@ -196,7 +200,7 @@ export const PLAN_LIMITS: Record<Plan, {
     entriesPerForm: 10000,
     fields: 10,
     draws: Infinity,
-    templates: ['clean', 'neon', 'gradient', 'party', 'luxury', 'brutal', 'glass', 'split', 'arcade', 'conversational'],
+    templates: ['clean', 'neon', 'gradient', 'party', 'luxury', 'brutal', 'glass', 'split', 'arcade', 'conversational', 'terminal', 'holographic'],
     ads: false,
     branding: false,
   },
@@ -206,7 +210,7 @@ export const PLAN_LIMITS: Record<Plan, {
     entriesPerForm: Infinity,
     fields: Infinity,
     draws: Infinity,
-    templates: ['clean', 'neon', 'gradient', 'party', 'luxury', 'brutal', 'glass', 'split', 'arcade', 'conversational'],
+    templates: ['clean', 'neon', 'gradient', 'party', 'luxury', 'brutal', 'glass', 'split', 'arcade', 'conversational', 'terminal', 'holographic'],
     ads: false,
     branding: false,
   },

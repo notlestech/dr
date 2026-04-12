@@ -1,12 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import { Trash2 } from 'lucide-react'
 import type { Form } from '@/types/app'
@@ -20,17 +32,24 @@ export default function FormSettingsPage({ params }: Props) {
   const supabase = createClient()
 
   const [form, setForm] = useState<Form | null>(null)
+  const [savedForm, setSavedForm] = useState<Form | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const fetchedRef = useRef(false)
 
-  // Load form on mount
-  if (!form && loading) {
+  useEffect(() => {
+    if (fetchedRef.current) return
+    fetchedRef.current = true
     supabase.from('forms').select('*').eq('id', formId).single().then(({ data }) => {
       setForm(data as Form)
+      setSavedForm(data as Form)
       setLoading(false)
     })
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formId])
+
+  const isDirty = JSON.stringify(form) !== JSON.stringify(savedForm)
 
   async function save() {
     if (!form) return
@@ -48,20 +67,42 @@ export default function FormSettingsPage({ params }: Props) {
       updated_at: new Date().toISOString(),
     }).eq('id', formId)
 
-    if (error) toast.error(error.message)
-    else toast.success('Settings saved')
+    if (error) {
+      toast.error(error.message)
+    } else {
+      toast.success('Settings saved')
+      setSavedForm(form)
+    }
     setSaving(false)
   }
 
   async function deleteForm() {
-    if (!confirm('Delete this form and ALL its entries? This cannot be undone.')) return
     setDeleting(true)
     await supabase.from('forms').delete().eq('id', formId)
     toast.success('Form deleted')
     router.push('/forms')
   }
 
-  if (loading) return <div className="p-6 text-muted-foreground text-sm">Loading...</div>
+  if (loading) {
+    return (
+      <div className="p-6 max-w-2xl mx-auto space-y-8">
+        <Skeleton className="h-8 w-48" />
+        <div className="space-y-4">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <div className="space-y-4">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-10 w-40" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </div>
+      </div>
+    )
+  }
+
   if (!form) return <div className="p-6 text-muted-foreground text-sm">Form not found</div>
 
   return (
@@ -74,11 +115,11 @@ export default function FormSettingsPage({ params }: Props) {
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="name">Form Name</Label>
-            <Input id="name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="" />
+            <Input id="name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="desc">Description</Label>
-            <Input id="desc" value={form.description ?? ''} onChange={e => setForm({ ...form, description: e.target.value })} className="" />
+            <Input id="desc" value={form.description ?? ''} onChange={e => setForm({ ...form, description: e.target.value })} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="accent">Accent Color</Label>
@@ -135,24 +176,48 @@ export default function FormSettingsPage({ params }: Props) {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="webhook">Webhook URL (Business)</Label>
-            <Input id="webhook" value={form.webhook_url ?? ''} onChange={e => setForm({ ...form, webhook_url: e.target.value || null })} className="" placeholder="https://your-server.com/webhook" />
+            <Input id="webhook" value={form.webhook_url ?? ''} onChange={e => setForm({ ...form, webhook_url: e.target.value || null })} placeholder="https://your-server.com/webhook" />
           </div>
         </div>
       </div>
 
       {/* Save */}
-      <Button onClick={save} disabled={saving}>
-        {saving ? 'Saving...' : 'Save Settings'}
-      </Button>
+      <div className="flex items-center gap-3">
+        <Button onClick={save} disabled={saving || !isDirty}>
+          {saving ? 'Saving...' : 'Save Settings'}
+        </Button>
+        {isDirty && <span className="text-xs text-muted-foreground">You have unsaved changes</span>}
+      </div>
 
       {/* Danger zone */}
       <div className="border border-red-500/20 rounded-xl p-4 space-y-3">
         <h2 className="text-sm font-medium text-red-400">Danger Zone</h2>
         <p className="text-xs text-muted-foreground">Deleting a form permanently removes all entries, draws, and analytics. This cannot be undone.</p>
-        <Button variant="outline" onClick={deleteForm} disabled={deleting} className="border-red-500/30 text-red-400 hover:bg-red-500/10 gap-2">
-          <Trash2 className="w-4 h-4" />
-          {deleting ? 'Deleting...' : 'Delete Form'}
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger
+            render={<Button variant="outline" disabled={deleting} className="border-red-500/30 text-red-400 hover:bg-red-500/10 gap-2" />}
+          >
+            <Trash2 className="w-4 h-4" />
+            {deleting ? 'Deleting...' : 'Delete Form'}
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete &ldquo;{form.name}&rdquo;?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This permanently deletes the form and all its entries, draws, and analytics. There is no way to recover this data.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={deleteForm}
+                className="bg-red-600 hover:bg-red-700 focus:ring-red-600 text-white"
+              >
+                Delete Forever
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   )

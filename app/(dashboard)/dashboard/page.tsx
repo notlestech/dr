@@ -3,9 +3,9 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
-import { Plus, Trophy, Users, Layers, ArrowRight, Dice5, Clock } from 'lucide-react'
+import { Plus, Trophy, Users, Layers, ArrowRight, Dice5, Clock, Zap, Star, Building2 } from 'lucide-react'
 import { formatNumber, timeAgo } from '@/lib/utils'
-import type { Form } from '@/types/app'
+import type { Form, Plan } from '@/types/app'
 import { UpgradeToast } from '@/components/dashboard/upgrade-toast'
 
 export const metadata = { title: 'Dashboard' }
@@ -28,11 +28,13 @@ async function getData(userId: string) {
   if (!membership) return null
   const wid = membership.workspace_id
 
-  const [{ data: forms }, { data: recentDraws }, { data: profile }] = await Promise.all([
+  const [{ data: forms }, { data: recentDraws }, { data: profile }, { data: sub }] = await Promise.all([
     supabase.from('forms').select('*').eq('workspace_id', wid).order('updated_at', { ascending: false }).limit(3),
     supabase.from('draws').select('*, forms(name, accent_color)').order('drawn_at', { ascending: false }).limit(5),
     supabase.from('profiles').select('full_name').eq('id', userId).single(),
+    supabase.from('subscriptions').select('plan').eq('workspace_id', wid).maybeSingle(),
   ])
+  const plan = (sub?.plan ?? 'free') as Plan
 
   const formList = (forms ?? []) as Form[]
   let totalEntries = 0
@@ -60,6 +62,7 @@ async function getData(userId: string) {
     totalWinners,
     recentDraws: recentDraws ?? [],
     name: profile?.full_name?.split(' ')[0] ?? null,
+    plan,
   }
 }
 
@@ -71,7 +74,9 @@ export default async function DashboardPage() {
   const data = await getData(user.id)
   if (!data) redirect('/login')
 
-  const { forms, totalForms, totalEntries, totalWinners, recentDraws, name } = data
+  const { forms, totalForms, totalEntries, totalWinners, recentDraws, name, plan } = data
+
+  const planAccent = plan === 'business' ? '#f59e0b' : plan === 'pro' ? '#8b5cf6' : undefined
 
   const stats = [
     { label: 'Forms',   value: totalForms,                    icon: Layers },
@@ -93,10 +98,62 @@ export default async function DashboardPage() {
         </p>
       </div>
 
+      {/* Plan banner */}
+      {plan === 'free' && (
+        <Link href="/settings/billing">
+          <div className="border border-dashed rounded-xl p-4 flex items-center gap-4 hover:border-violet-500/40 hover:bg-violet-500/5 transition-all group cursor-pointer">
+            <div className="size-9 rounded-lg bg-violet-500/10 flex items-center justify-center shrink-0">
+              <Zap className="size-4 text-violet-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">Free plan</p>
+              <p className="text-xs text-muted-foreground">Unlock unlimited forms, pro templates & more</p>
+            </div>
+            <span className="text-xs font-semibold text-violet-500 group-hover:underline shrink-0">Upgrade →</span>
+          </div>
+        </Link>
+      )}
+
+      {plan === 'pro' && (
+        <div
+          className="rounded-xl p-4 flex items-center gap-4"
+          style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(168,85,247,0.06) 100%)', border: '1px solid rgba(139,92,246,0.2)' }}
+        >
+          <div className="size-9 rounded-lg bg-violet-500/15 flex items-center justify-center shrink-0">
+            <Star className="size-4 text-violet-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-violet-300">Pro</p>
+            <p className="text-xs text-violet-400/70">Unlimited forms · 10k entries/form · All templates</p>
+          </div>
+          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-violet-500/20 text-violet-300 shrink-0">Active</span>
+        </div>
+      )}
+
+      {plan === 'business' && (
+        <div
+          className="rounded-xl p-4 flex items-center gap-4"
+          style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.10) 0%, rgba(251,191,36,0.05) 100%)', border: '1px solid rgba(245,158,11,0.2)' }}
+        >
+          <div className="size-9 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+            <Building2 className="size-4 text-amber-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-amber-300">Business</p>
+            <p className="text-xs text-amber-400/70">Unlimited everything · 3 workspaces · Spotlight draw</p>
+          </div>
+          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-amber-500/20 text-amber-300 shrink-0">Active</span>
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         {stats.map(({ label, value, icon: Icon }) => (
-          <div key={label} className="border rounded-xl p-4 space-y-2">
+          <div
+            key={label}
+            className="border rounded-xl p-4 space-y-2"
+            style={planAccent ? { borderColor: planAccent + '40', boxShadow: `0 0 0 1px ${planAccent}18` } : undefined}
+          >
             <div className="flex items-center gap-2">
               <Icon className="size-4 text-muted-foreground" />
               <span className="text-xs text-muted-foreground">{label}</span>

@@ -11,6 +11,8 @@ import { GlassTemplate } from './glass'
 import { SplitTemplate } from './split'
 import { ArcadeTemplate } from './arcade'
 import { ConversationalTemplate } from './conversational'
+import { TerminalTemplate } from './terminal'
+import { HolographicTemplate } from './holographic'
 
 const TEMPLATE_MAP: Record<FormTemplate, React.ComponentType<FormTemplateProps>> = {
   clean:          CleanTemplate,
@@ -23,6 +25,8 @@ const TEMPLATE_MAP: Record<FormTemplate, React.ComponentType<FormTemplateProps>>
   split:          SplitTemplate,
   arcade:         ArcadeTemplate,
   conversational: ConversationalTemplate,
+  terminal:       TerminalTemplate,
+  holographic:    HolographicTemplate,
 }
 
 export function FormTemplateRenderer(props: FormTemplateProps) {

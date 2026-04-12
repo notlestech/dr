@@ -121,17 +121,33 @@ export async function POST(
 
   // Insert entry
   const emailValue = body.data.email || Object.values(body.data).find(v => v.includes('@'))
-  const { error: insertError } = await getSupabase().from('entries').insert({
+  const { data: inserted, error: insertError } = await getSupabase().from('entries').insert({
     form_id: form.id,
     data: body.data,
     ip_hash: hashValue(ip),
     email_hash: emailValue ? hashValue(emailValue) : null,
     status: form.require_confirmation ? 'pending' : 'confirmed',
     source: 'web',
-  })
+  }).select('id').single()
 
   if (insertError) {
     return NextResponse.json({ error: 'Failed to save entry' }, { status: 500 })
+  }
+
+  // Fire webhook (non-blocking — failure does not affect the response)
+  if (form.webhook_url) {
+    const payload = {
+      event: 'entry.created',
+      form: { id: form.id, name: form.name, subdomain: form.subdomain },
+      entry: { id: inserted?.id, data: body.data, source: 'web' },
+      timestamp: new Date().toISOString(),
+    }
+    fetch(form.webhook_url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'User-Agent': 'DrawVault-Webhook/1.0' },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(8000),
+    }).catch(() => { /* Webhook failures are silent */ })
   }
 
   return NextResponse.json({ success: true })

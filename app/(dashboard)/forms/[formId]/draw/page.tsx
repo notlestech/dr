@@ -20,13 +20,14 @@ export default async function DrawPage({ params }: { params: Promise<{ formId: s
   const { data: subscription } = membership
     ? await supabase
         .from('subscriptions')
-        .select('status')
+        .select('plan, status')
         .eq('workspace_id', membership.workspace_id)
         .eq('status', 'active')
         .maybeSingle()
     : { data: null }
 
   const isPro = !!subscription
+  const isBusiness = subscription?.plan === 'business'
 
   const { data: form } = await supabase
     .from('forms')
@@ -56,6 +57,7 @@ export default async function DrawPage({ params }: { params: Promise<{ formId: s
       entries={formattedEntries}
       userId={user.id}
       isPro={isPro}
+      isBusiness={isBusiness}
     />
   )
 }

@@ -13,7 +13,7 @@ export const fieldSchema = z.object({
 
 export const formWizardSchema = z.object({
   // Step 1 — template + basics
-  template: z.enum(['clean', 'neon', 'gradient', 'party', 'luxury', 'brutal', 'glass', 'split', 'arcade', 'conversational']),
+  template: z.enum(['clean', 'neon', 'gradient', 'party', 'luxury', 'brutal', 'glass', 'split', 'arcade', 'conversational', 'terminal', 'holographic']),
   raffle_type: z.enum(['giveaway', 'earlyaccess', 'contest', 'internal']),
   name: z.string().min(2, 'Name must be at least 2 characters').max(80),
   description: z.string().max(300).optional(),
@@ -39,7 +39,7 @@ export const formWizardSchema = z.object({
   show_entry_count: z.boolean(),
   winners_page: z.boolean(),
   require_confirmation: z.boolean(),
-  draw_theme: z.enum(['slot', 'wheel', 'cards', 'dice']).default('slot'),
+  draw_theme: z.enum(['slot', 'wheel', 'cards', 'dice', 'spotlight']).default('slot'),
 })
 
 export type FormWizardValues = z.infer<typeof formWizardSchema>

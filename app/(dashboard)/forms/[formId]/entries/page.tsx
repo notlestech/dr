@@ -14,20 +14,22 @@ export default async function EntriesPage({ params }: Props) {
   const { data: form } = await supabase.from('forms').select('*').eq('id', formId).single()
   if (!form) notFound()
 
-  const { data: entries } = await supabase
+  const { data: entries, count: totalCount } = await supabase
     .from('entries')
-    .select('*')
+    .select('*', { count: 'exact' })
     .eq('form_id', formId)
     .order('entered_at', { ascending: false })
-    .limit(500)
+    .limit(5000)
+
+  const total = totalCount ?? (entries ?? []).length
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Entries</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">{(entries ?? []).length} entries for {(form as Form).name}</p>
+        <p className="text-sm text-muted-foreground mt-0.5">{total.toLocaleString()} entries for {(form as Form).name}</p>
       </div>
-      <EntriesTable form={form as Form} entries={(entries ?? []) as Entry[]} />
+      <EntriesTable form={form as Form} entries={(entries ?? []) as Entry[]} totalCount={total} />
     </div>
   )
 }

@@ -4,21 +4,23 @@ import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
 import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { Trophy, Maximize, RotateCcw, Save, Users, Shuffle, Loader2, CheckCircle2, ArrowLeft, RotateCw, CreditCard, Dice5, Lock } from 'lucide-react'
+import { Trophy, Maximize, RotateCcw, Save, Users, Shuffle, Loader2, CheckCircle2, ArrowLeft, RotateCw, CreditCard, Lock, Sparkles } from 'lucide-react'
 import { formatNumber } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { WheelDraw } from '@/components/draw/wheel-draw'
+import { CardsDraw } from '@/components/draw/cards-draw'
+import { SpotlightDraw } from '@/components/draw/spotlight-draw'
 
 interface Entry { id: string; displayName: string }
 interface Form  { id: string; name: string; accent_color: string; draw_theme: string; status: string; subdomain: string }
-interface Props  { form: Form; entries: Entry[]; userId: string; isPro: boolean }
+interface Props  { form: Form; entries: Entry[]; userId: string; isPro: boolean; isBusiness: boolean }
 
 const DRAW_THEMES = [
-  { id: 'slot',  label: 'Slot',  icon: Shuffle,    free: true  },
-  { id: 'wheel', label: 'Wheel', icon: RotateCw,   free: false },
-  { id: 'cards', label: 'Cards', icon: CreditCard, free: false },
-  { id: 'dice',  label: 'Dice',  icon: Dice5,      free: false },
+  { id: 'slot',      label: 'Slot',      icon: Shuffle,    free: true,  pro: true,  business: true  },
+  { id: 'wheel',     label: 'Wheel',     icon: RotateCw,   free: false, pro: true,  business: true  },
+  { id: 'cards',     label: 'Cards',     icon: CreditCard, free: false, pro: true,  business: true  },
+  { id: 'spotlight', label: 'Spotlight', icon: Sparkles,   free: false, pro: false, business: true  },
 ] as const
 
 const ITEM_H = 72
@@ -32,7 +34,7 @@ function fisherYates<T>(arr: T[]): T[] {
   return a
 }
 
-export function DrawClient({ form, entries: initialEntries, userId, isPro }: Props) {
+export function DrawClient({ form, entries: initialEntries, userId, isPro, isBusiness }: Props) {
   const router               = useRouter()
   const [entries]            = useState(initialEntries)
   const [drawTheme, setDrawTheme] = useState(form.draw_theme ?? 'slot')
@@ -42,36 +44,57 @@ export function DrawClient({ form, entries: initialEntries, userId, isPro }: Pro
   const containerRef         = useRef<HTMLDivElement>(null)
   const accent               = form.accent_color
 
+  // Slot machine state
   const [spinKey, setSpinKey]     = useState(0)
   const [reelItems, setReelItems] = useState<Entry[]>([])
   const [targetY, setTargetY]     = useState(0)
   const pendingWinner             = useRef<Entry | null>(null)
 
+  function isThemeLocked(theme: typeof DRAW_THEMES[number]) {
+    if (theme.free) return false
+    if (!theme.pro && theme.business) return !isBusiness // business-only
+    return !isPro // pro+
+  }
+
   const spin = useCallback(() => {
     if (phase === 'spinning' || entries.length === 0) return
 
     const selectedWinner = fisherYates(entries)[0]
-    pendingWinner.current = selectedWinner
 
-    const padding = entries.length < 5 ? 6 : 3
-    const reel: Entry[] = []
-    for (let i = 0; i < padding; i++) reel.push(...fisherYates(entries))
-    reel.push(selectedWinner)
+    if (drawTheme === 'slot') {
+      pendingWinner.current = selectedWinner
 
-    const ty = -((reel.length - 1) * ITEM_H)
+      const padding = entries.length < 5 ? 6 : 3
+      const reel: Entry[] = []
+      for (let i = 0; i < padding; i++) reel.push(...fisherYates(entries))
+      reel.push(selectedWinner)
 
-    setReelItems(reel)
-    setTargetY(ty)
-    setWinner(null)
-    setPhase('spinning')
-    setSpinKey(k => k + 1)
-  }, [entries, phase])
+      setReelItems(reel)
+      setTargetY(-((reel.length - 1) * ITEM_H))
+      setWinner(null)
+      setPhase('spinning')
+      setSpinKey(k => k + 1)
+    } else {
+      // For non-slot themes, set winner immediately so animations can use it
+      setWinner(selectedWinner)
+      setPhase('spinning')
+    }
+  }, [entries, phase, drawTheme])
 
-  function onSpinComplete() {
+  function onSlotComplete() {
     const w = pendingWinner.current
     if (!w) return
     setWinner(w)
     setPhase('revealed')
+    fireConfetti()
+  }
+
+  function onAnimationComplete() {
+    setPhase('revealed')
+    fireConfetti()
+  }
+
+  function fireConfetti() {
     import('canvas-confetti').then(({ default: confetti }) => {
       confetti({ particleCount: 180, spread: 110, origin: { y: 0.55 }, colors: [accent, '#ffffff', accent + 'aa'] })
     })
@@ -80,21 +103,26 @@ export function DrawClient({ form, entries: initialEntries, userId, isPro }: Pro
   async function saveDraw() {
     if (!winner) return
     setSaving(true)
-    const supabase = createClient()
 
-    const { data: draw, error } = await supabase
-      .from('draws')
-      .insert({ form_id: form.id, drawn_by: userId, winner_count: 1 })
-      .select()
-      .single()
+    try {
+      const res = await fetch('/api/draws/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ formId: form.id, entryId: winner.id }),
+      })
 
-    if (error) { toast.error('Failed to save draw'); setSaving(false); return }
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}))
+        throw new Error(json.error ?? 'Failed to save draw')
+      }
 
-    await supabase.from('entries').update({ is_winner: true, draw_id: draw.id }).eq('id', winner.id)
-
-    toast.success(`${winner.displayName} saved as winner`)
-    setPhase('saved')
-    setSaving(false)
+      toast.success(`${winner.displayName} saved as winner`)
+      setPhase('saved')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save draw')
+    } finally {
+      setSaving(false)
+    }
   }
 
   function reset() {
@@ -132,21 +160,21 @@ export function DrawClient({ form, entries: initialEntries, userId, isPro }: Pro
             </div>
           </div>
         </div>
+
         <div className="flex items-center gap-1">
           {DRAW_THEMES.map(theme => {
             const Icon = theme.icon
-            const locked = !theme.free && !isPro
+            const locked = isThemeLocked(theme)
             const active = drawTheme === theme.id
+            const label = !theme.pro && theme.business ? `${theme.label} (Business)` : !theme.free ? `${theme.label} (Pro)` : theme.label
             return (
               <button
                 key={theme.id}
                 onClick={() => !locked && setDrawTheme(theme.id)}
-                title={locked ? `${theme.label} (Pro)` : theme.label}
+                title={locked ? label : theme.label}
                 className={cn(
                   'relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
-                  active
-                    ? 'text-white'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                  active ? 'text-white' : 'text-muted-foreground hover:text-foreground hover:bg-muted',
                   locked && 'opacity-50 cursor-not-allowed'
                 )}
                 style={active ? { backgroundColor: accent } : undefined}
@@ -158,6 +186,7 @@ export function DrawClient({ form, entries: initialEntries, userId, isPro }: Pro
             )
           })}
         </div>
+
         <Button variant="ghost" size="sm" onClick={toggleFullscreen}>
           <Maximize className="w-4 h-4" />
         </Button>
@@ -174,51 +203,84 @@ export function DrawClient({ form, entries: initialEntries, userId, isPro }: Pro
           </div>
         ) : (
           <>
-            {/* Slot machine */}
-            <div
-              className="w-full max-w-md rounded-2xl border-2 overflow-hidden relative select-none"
-              style={{ borderColor: accent + '50' }}
-            >
-              <div className="absolute top-0 inset-x-0 h-20 z-10 pointer-events-none"
-                style={{ background: 'linear-gradient(to bottom, var(--background) 0%, transparent 100%)' }} />
-              <div className="absolute bottom-0 inset-x-0 h-20 z-10 pointer-events-none"
-                style={{ background: 'linear-gradient(to top, var(--background) 0%, transparent 100%)' }} />
+            {/* === SLOT === */}
+            {drawTheme === 'slot' && (
               <div
-                className="absolute inset-x-0 z-20 pointer-events-none border-y-2"
-                style={{ top: `calc(50% - ${ITEM_H / 2}px)`, height: ITEM_H, borderColor: accent, background: accent + '12', boxShadow: `0 0 24px 0 ${accent}30` }}
-              />
-
-              <div className="h-[360px] overflow-hidden relative" style={{ background: accent + '06' }}>
-                {phase === 'idle' && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <p className="text-xl font-semibold text-muted-foreground">Ready to draw</p>
-                  </div>
-                )}
-
-                {reelItems.length > 0 && (
-                  <motion.div
-                    key={spinKey}
-                    initial={{ y: 0 }}
-                    animate={{ y: targetY }}
-                    transition={{ duration: 4.8, ease: [0.12, 0.0, 0.08, 1.0] }}
-                    onAnimationComplete={onSpinComplete}
-                  >
-                    {reelItems.map((entry, i) => {
-                      const isLast = i === reelItems.length - 1
-                      return (
-                        <div
-                          key={`${entry.id}-${i}`}
-                          className="flex items-center justify-center px-6 font-semibold text-xl truncate"
-                          style={{ height: ITEM_H, color: isLast ? accent : undefined, opacity: isLast ? 1 : 0.55 }}
-                        >
-                          {entry.displayName}
-                        </div>
-                      )
-                    })}
-                  </motion.div>
-                )}
+                className="w-full max-w-md rounded-2xl border-2 overflow-hidden relative select-none"
+                style={{ borderColor: accent + '50' }}
+              >
+                <div className="absolute top-0 inset-x-0 h-20 z-10 pointer-events-none"
+                  style={{ background: 'linear-gradient(to bottom, var(--background) 0%, transparent 100%)' }} />
+                <div className="absolute bottom-0 inset-x-0 h-20 z-10 pointer-events-none"
+                  style={{ background: 'linear-gradient(to top, var(--background) 0%, transparent 100%)' }} />
+                <div
+                  className="absolute inset-x-0 z-20 pointer-events-none border-y-2"
+                  style={{ top: `calc(50% - ${ITEM_H / 2}px)`, height: ITEM_H, borderColor: accent, background: accent + '12', boxShadow: `0 0 24px 0 ${accent}30` }}
+                />
+                <div className="h-[360px] overflow-hidden relative" style={{ background: accent + '06' }}>
+                  {phase === 'idle' && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <p className="text-xl font-semibold text-muted-foreground">Ready to draw</p>
+                    </div>
+                  )}
+                  {reelItems.length > 0 && (
+                    <motion.div
+                      key={spinKey}
+                      initial={{ y: 0 }}
+                      animate={{ y: targetY }}
+                      transition={{ duration: 4.8, ease: [0.12, 0.0, 0.08, 1.0] }}
+                      onAnimationComplete={onSlotComplete}
+                    >
+                      {reelItems.map((entry, i) => {
+                        const isLast = i === reelItems.length - 1
+                        return (
+                          <div
+                            key={`${entry.id}-${i}`}
+                            className="flex items-center justify-center px-6 font-semibold text-xl truncate"
+                            style={{ height: ITEM_H, color: isLast ? accent : undefined, opacity: isLast ? 1 : 0.55 }}
+                          >
+                            {entry.displayName}
+                          </div>
+                        )
+                      })}
+                    </motion.div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* === WHEEL === */}
+            {drawTheme === 'wheel' && (
+              <WheelDraw
+                entries={entries}
+                accent={accent}
+                winner={winner}
+                isSpinning={phase === 'spinning'}
+                onComplete={onAnimationComplete}
+              />
+            )}
+
+            {/* === CARDS === */}
+            {drawTheme === 'cards' && (
+              <CardsDraw
+                entries={entries}
+                accent={accent}
+                winner={winner}
+                isSpinning={phase === 'spinning'}
+                onComplete={onAnimationComplete}
+              />
+            )}
+
+            {/* === SPOTLIGHT === */}
+            {drawTheme === 'spotlight' && (
+              <SpotlightDraw
+                entries={entries}
+                accent={accent}
+                winner={winner}
+                isSpinning={phase === 'spinning'}
+                onComplete={onAnimationComplete}
+              />
+            )}
 
             {/* Winner reveal */}
             <AnimatePresence>

@@ -5,24 +5,38 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
-import { Download, Flag, Trophy, Search, X } from 'lucide-react'
+import { Download, Flag, Trophy, Search, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import type { Form, Entry } from '@/types/app'
+
+const PAGE_SIZE = 100
 
 interface Props {
   form: Form
   entries: Entry[]
+  totalCount?: number
 }
 
-export function EntriesTable({ form, entries: initial }: Props) {
+export function EntriesTable({ form, entries: initial, totalCount }: Props) {
   const [entries, setEntries] = useState(initial)
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
 
   const filtered = entries.filter(e => {
     if (!search) return true
     const vals = Object.values(e.data).join(' ').toLowerCase()
     return vals.includes(search.toLowerCase())
   })
+
+  // Paginate the filtered list
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  // Reset to page 1 when search changes
+  function handleSearch(v: string) {
+    setSearch(v)
+    setPage(1)
+  }
 
   async function flag(entry: Entry) {
     const supabase = createClient()
@@ -61,13 +75,13 @@ export function EntriesTable({ form, entries: initial }: Props) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => handleSearch(e.target.value)}
             placeholder="Search entries..."
             className="pl-9 text-sm"
           />
           {search && (
             <button
-              onClick={() => setSearch('')}
+              onClick={() => handleSearch('')}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <X className="w-3 h-3" />
@@ -96,13 +110,13 @@ export function EntriesTable({ form, entries: initial }: Props) {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filtered.length === 0 ? (
+              {paginated.length === 0 ? (
                 <tr>
                   <td colSpan={form.fields.length + 3} className="px-4 py-10 text-center text-muted-foreground text-sm">
                     {search ? 'No entries match your search' : 'No entries yet'}
                   </td>
                 </tr>
-              ) : filtered.map(e => (
+              ) : paginated.map(e => (
                 <tr
                   key={e.id}
                   className={`hover:bg-muted/30 transition-colors ${e.flagged ? 'opacity-50' : ''}`}
@@ -140,9 +154,42 @@ export function EntriesTable({ form, entries: initial }: Props) {
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        {filtered.length} entries{search ? ` (filtered from ${entries.length})` : ''}
-      </p>
+      {/* Footer: count + pagination */}
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-muted-foreground">
+          {search
+            ? `${filtered.length} matching${totalCount && totalCount > entries.length ? ` (of ${totalCount.toLocaleString()} total)` : ''}`
+            : `${(totalCount ?? entries.length).toLocaleString()} entries`}
+        </p>
+
+        {totalPages > 1 && (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </Button>
+            <span className="text-xs text-muted-foreground px-1">
+              {page} / {totalPages}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              aria-label="Next page"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
