@@ -11,7 +11,7 @@ import { sendSignupOtp, resendSignupOtp, verifyOtpAndCreateAccount } from '@/act
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, Trophy, Check, X } from 'lucide-react'
+import { Loader2, Trophy, Check, X, Eye, EyeOff } from 'lucide-react'
 
 declare global {
   interface Window {
@@ -46,8 +46,9 @@ export default function SignupPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showRules, setShowRules] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [showRules, setShowRules]       = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading]           = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
 
   // Turnstile
@@ -137,7 +138,6 @@ export default function SignupPage() {
     }
     toast.success('Welcome to DrawVault!')
     router.push('/dashboard')
-    router.refresh()
   }
 
   async function handleResend() {
@@ -353,15 +353,27 @@ export default function SignupPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Create a strong password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              onFocus={() => setShowRules(true)}
-              required
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Create a strong password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                onFocus={() => setShowRules(true)}
+                className="pr-10"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
             {/* Live password requirements */}
             <AnimatePresence>
               {showRules && (

@@ -286,47 +286,50 @@ export function HomeContent({ isLoggedIn = false }: Props) {
           </h2>
           <p className="text-muted-foreground">{t.pricing.subtitle}</p>
         </RevealSection>
-        {/* pt-5 gives space for the -top-3 "Most Popular" badge */}
+        {/* pt-5 gives clearance for the -top-3.5 "Most Popular" badge on the wrapper */}
         <div className="grid gap-6 md:grid-cols-3 pt-5">
           {t.pricing.plans.map((plan, i) => (
             <RevealSection key={plan.name} delay={i * 100}>
-              <Card
-                className={cn(
-                  'relative flex flex-col h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-2 cursor-default',
-                  PLAN_HIGHLIGHT[i]
-                    ? 'border-foreground shadow-md hover:border-foreground'
-                    : 'hover:border-foreground/30',
-                )}
-              >
+              {/* Wrapper is the positioning root so the badge sits outside the overflow-hidden Card */}
+              <div className="relative h-full">
                 {PLAN_HIGHLIGHT[i] && (
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10">
                     <Badge className="px-3 shadow-md">Most Popular</Badge>
                   </div>
                 )}
-                <CardHeader className={PLAN_HIGHLIGHT[i] ? 'pt-7' : ''}>
-                  <CardTitle className="text-lg">{plan.name}</CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
-                  <div className="flex items-baseline gap-1 pt-2">
-                    <span className="text-4xl font-bold tracking-tight">{PLAN_PRICES[i]}</span>
-                    <span className="text-sm text-muted-foreground">{PLAN_PERIODS[i]}</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col gap-5">
-                  <ul className="space-y-2.5 flex-1">
-                    {PLAN_FEATURES[plan.name as keyof typeof PLAN_FEATURES]?.map((f) => (
-                      <li key={f} className="flex items-center gap-2.5 text-sm">
-                        <Check className="size-4 shrink-0 text-emerald-500" />
-                        <span className="text-muted-foreground">{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link href={isLoggedIn ? '/upgrade' : '/signup'}>
-                    <Button className="w-full rounded-full cursor-pointer" variant={PLAN_HIGHLIGHT[i] ? 'default' : 'outline'}>
-                      {plan.cta}
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+                <Card
+                  className={cn(
+                    'flex flex-col h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-2 cursor-default',
+                    PLAN_HIGHLIGHT[i]
+                      ? 'border-foreground shadow-md hover:border-foreground'
+                      : 'hover:border-foreground/30',
+                  )}
+                >
+                  <CardHeader className={PLAN_HIGHLIGHT[i] ? 'pt-7' : ''}>
+                    <CardTitle className="text-lg">{plan.name}</CardTitle>
+                    <CardDescription>{plan.description}</CardDescription>
+                    <div className="flex items-baseline gap-1 pt-2">
+                      <span className="text-4xl font-bold tracking-tight">{PLAN_PRICES[i]}</span>
+                      <span className="text-sm text-muted-foreground">{PLAN_PERIODS[i]}</span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="flex-1 flex flex-col gap-5">
+                    <ul className="space-y-2.5 flex-1">
+                      {PLAN_FEATURES[plan.name as keyof typeof PLAN_FEATURES]?.map((f) => (
+                        <li key={f} className="flex items-center gap-2.5 text-sm">
+                          <Check className="size-4 shrink-0 text-emerald-500" />
+                          <span className="text-muted-foreground">{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link href={isLoggedIn ? '/upgrade' : '/signup'}>
+                      <Button className="w-full rounded-full cursor-pointer" variant={PLAN_HIGHLIGHT[i] ? 'default' : 'outline'}>
+                        {plan.cta}
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              </div>
             </RevealSection>
           ))}
         </div>
