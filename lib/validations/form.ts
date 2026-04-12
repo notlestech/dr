@@ -76,6 +76,10 @@ export const RAFFLE_TYPE_PRESETS = {
       { id: 'email', type: 'email' as const, label: 'Email address', placeholder: 'you@example.com', required: true },
       { id: 'name', type: 'text' as const, label: 'Full name', placeholder: 'Your name', required: true },
     ],
+    // Festive celebration theme
+    accent_color: '#f43f5e',
+    template: 'party' as const,
+    draw_theme: 'wheel' as const,
   },
   earlyaccess: {
     name: 'Early Access',
@@ -83,6 +87,10 @@ export const RAFFLE_TYPE_PRESETS = {
     fields: [
       { id: 'email', type: 'email' as const, label: 'Email address', placeholder: 'you@example.com', required: true },
     ],
+    // Clean modern SaaS theme
+    accent_color: '#6366f1',
+    template: 'gradient' as const,
+    draw_theme: 'slot' as const,
   },
   contest: {
     name: 'Contest',
@@ -92,6 +100,10 @@ export const RAFFLE_TYPE_PRESETS = {
       { id: 'name', type: 'text' as const, label: 'Full name', placeholder: 'Your name', required: true },
       { id: 'submission', type: 'text' as const, label: 'Your submission', placeholder: 'Enter your answer or link...', required: true },
     ],
+    // Bold competitive theme
+    accent_color: '#f59e0b',
+    template: 'neon' as const,
+    draw_theme: 'spotlight' as const,
   },
   internal: {
     name: 'Internal Draw',
@@ -100,5 +112,9 @@ export const RAFFLE_TYPE_PRESETS = {
       { id: 'name', type: 'text' as const, label: 'Full name', placeholder: 'Your name', required: true },
       { id: 'employee_id', type: 'text' as const, label: 'Employee ID', placeholder: 'EMP-0001', required: true },
     ],
+    // Professional corporate theme
+    accent_color: '#10b981',
+    template: 'clean' as const,
+    draw_theme: 'dice' as const,
   },
 }

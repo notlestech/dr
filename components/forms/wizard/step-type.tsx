@@ -19,7 +19,9 @@ interface RaffleTypeInfo {
   id: 'giveaway' | 'earlyaccess' | 'contest' | 'internal'
   label: string
   desc: string
+  badge: string
   icon: React.ElementType
+  color: string   // hex — drives the card's unique identity
   tooltip: {
     summary: string
     fields: string[]
@@ -32,7 +34,9 @@ const RAFFLE_TYPES: RaffleTypeInfo[] = [
     id: 'giveaway',
     label: 'Giveaway',
     desc: 'Prize draw for your audience',
+    badge: 'Festive',
     icon: Gift,
+    color: '#f43f5e',
     tooltip: {
       summary: 'Collect entries and randomly draw one or more winners.',
       fields: ['Email address', 'Full name'],
@@ -43,7 +47,9 @@ const RAFFLE_TYPES: RaffleTypeInfo[] = [
     id: 'earlyaccess',
     label: 'Early Access',
     desc: 'Waitlist for a product launch',
+    badge: 'Minimal',
     icon: Rocket,
+    color: '#6366f1',
     tooltip: {
       summary: 'Build a waitlist and randomly select who gets in first.',
       fields: ['Email address only (low friction)'],
@@ -54,7 +60,9 @@ const RAFFLE_TYPES: RaffleTypeInfo[] = [
     id: 'contest',
     label: 'Contest',
     desc: 'Submission-based competition',
+    badge: 'Bold',
     icon: Award,
+    color: '#f59e0b',
     tooltip: {
       summary: 'Participants submit an answer or link — you draw or pick the best.',
       fields: ['Email address', 'Full name', 'Submission (answer or URL)'],
@@ -65,7 +73,9 @@ const RAFFLE_TYPES: RaffleTypeInfo[] = [
     id: 'internal',
     label: 'Internal Draw',
     desc: 'Team or employee raffle',
+    badge: 'Professional',
     icon: Building2,
+    color: '#10b981',
     tooltip: {
       summary: 'A private raffle for your team — not meant for public audiences.',
       fields: ['Full name', 'Employee ID'],
@@ -84,6 +94,9 @@ export function StepType({ values, update }: Props) {
       subdomain: values.subdomain || generateSubdomain(newName),
       description: values.description || preset.description,
       fields: preset.fields.map(f => ({ ...f, id: `${f.id}_${Date.now()}` })),
+      accent_color: preset.accent_color,
+      template: preset.template,
+      draw_theme: preset.draw_theme,
     })
   }
 
@@ -110,24 +123,50 @@ export function StepType({ values, update }: Props) {
                       <button
                         onClick={() => selectType(t.id)}
                         className={cn(
-                          'flex items-start gap-3 p-4 rounded-xl border text-left transition-all',
-                          selected
-                            ? 'border-foreground bg-foreground/5'
-                            : 'border-border bg-card hover:border-foreground/30 hover:bg-muted/30'
+                          'flex items-start gap-3 p-4 rounded-xl border text-left transition-all duration-200',
+                          selected ? 'border-2' : 'border hover:border-foreground/20 hover:bg-muted/20'
                         )}
+                        style={selected ? {
+                          borderColor: t.color,
+                          backgroundColor: t.color + '0d',
+                        } : undefined}
                       />
                     }
                   >
-                    <div className={cn(
-                      'size-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5',
-                      selected ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'
-                    )}>
+                    {/* Icon */}
+                    <div
+                      className="size-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-all"
+                      style={{
+                        backgroundColor: selected ? t.color + '25' : t.color + '15',
+                        color: t.color,
+                      }}
+                    >
                       <Icon className="size-4" />
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">{t.label}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t.desc}</p>
+
+                    {/* Text */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold">{t.label}</p>
+                        {selected && (
+                          <span
+                            className="text-[10px] font-medium px-1.5 py-0.5 rounded-full leading-none"
+                            style={{ backgroundColor: t.color + '20', color: t.color }}
+                          >
+                            {t.badge}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{t.desc}</p>
                     </div>
+
+                    {/* Selection dot */}
+                    {selected && (
+                      <div
+                        className="size-2 rounded-full shrink-0 mt-1.5"
+                        style={{ backgroundColor: t.color }}
+                      />
+                    )}
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="max-w-56 p-3 space-y-2">
                     <p className="text-xs leading-relaxed">{t.tooltip.summary}</p>
@@ -142,6 +181,13 @@ export function StepType({ values, update }: Props) {
                     <div>
                       <p className="text-[10px] uppercase tracking-wider opacity-60 mb-0.5">Best for</p>
                       <p className="text-xs opacity-80">{t.tooltip.bestFor}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider opacity-60 mb-0.5">Pre-sets</p>
+                      <p className="text-xs opacity-80">
+                        {RAFFLE_TYPE_PRESETS[t.id].template.charAt(0).toUpperCase() + RAFFLE_TYPE_PRESETS[t.id].template.slice(1)} template
+                        · {RAFFLE_TYPE_PRESETS[t.id].draw_theme} draw
+                      </p>
                     </div>
                   </TooltipContent>
                 </Tooltip>

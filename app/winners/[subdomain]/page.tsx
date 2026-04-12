@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
+import Image from 'next/image'
 import { Trophy } from 'lucide-react'
 import type { Form, Entry, Draw } from '@/types/app'
 
@@ -46,7 +47,14 @@ export default async function WinnersPage({ params }: Props) {
       <div className="border-b border-zinc-800" style={{ borderColor: accent + '20' }}>
         <div className="max-w-2xl mx-auto px-4 py-6 flex items-center gap-3">
           {form.logo_url && (
-            <img src={form.logo_url} alt="Logo" className="w-10 h-10 rounded-lg object-contain" />
+            <Image
+              src={form.logo_url}
+              alt={`${form.name} logo`}
+              width={40}
+              height={40}
+              className="rounded-lg object-contain"
+              unoptimized={form.logo_url.startsWith('http')}
+            />
           )}
           <div>
             <h1 className="text-xl font-bold text-zinc-50">{form.name}</h1>

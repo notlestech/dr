@@ -51,8 +51,23 @@ export default function FormSettingsPage({ params }: Props) {
 
   const isDirty = JSON.stringify(form) !== JSON.stringify(savedForm)
 
+  function validateWebhookUrl(url: string | null): string | null {
+    if (!url) return null
+    try {
+      const parsed = new URL(url)
+      if (parsed.protocol !== 'https:') return 'Webhook URL must use HTTPS'
+      const blocked = /^(localhost|127\.|0\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/i
+      if (blocked.test(parsed.hostname)) return 'Webhook URL cannot point to a private or local address'
+    } catch {
+      return 'Webhook URL is not a valid URL'
+    }
+    return null
+  }
+
   async function save() {
     if (!form) return
+    const webhookErr = validateWebhookUrl(form.webhook_url)
+    if (webhookErr) { toast.error(webhookErr); return }
     setSaving(true)
     const { error } = await supabase.from('forms').update({
       name: form.name,

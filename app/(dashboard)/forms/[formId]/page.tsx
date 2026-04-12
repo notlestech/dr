@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { SharePanel } from '@/components/shared/share-panel'
 import { BackButton } from '@/components/dashboard/back-button'
 import { FormDetailActions } from '@/components/forms/form-detail-actions'
-import { Users, Trophy, BarChart2, Settings, Dice5, ExternalLink, Clock } from 'lucide-react'
+import { Users, Trophy, BarChart2, Settings, Dice5, ExternalLink, Clock, History } from 'lucide-react'
 import { formatNumber, timeAgo } from '@/lib/utils'
 import type { Form } from '@/types/app'
 
@@ -61,9 +61,10 @@ export default async function FormOverviewPage({ params }: Props) {
   ]
 
   const quickLinks = [
-    { href: `/forms/${formId}/entries`, icon: Users, label: 'Entries' },
-    { href: `/forms/${formId}/draw`, icon: Dice5, label: 'Draw' },
-    { href: `/forms/${formId}/analytics`, icon: BarChart2, label: 'Analytics' },
+    { href: `/forms/${formId}/entries`,  icon: Users,    label: 'Entries'  },
+    { href: `/forms/${formId}/draw`,     icon: Dice5,    label: 'Draw'     },
+    { href: `/forms/${formId}/draws`,    icon: History,  label: 'History'  },
+    { href: `/forms/${formId}/analytics`,icon: BarChart2,label: 'Analytics'},
     { href: `/forms/${formId}/settings`, icon: Settings, label: 'Settings' },
   ]
 
@@ -117,7 +118,7 @@ export default async function FormOverviewPage({ params }: Props) {
       </div>
 
       {/* Quick nav */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
         {quickLinks.map(({ href, icon: Icon, label }) => (
           <Link key={href} href={href}>
             <div className="border hover:border-foreground/40 rounded-xl p-4 flex flex-col items-center gap-2 transition-colors cursor-pointer">

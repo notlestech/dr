@@ -65,7 +65,7 @@ export function StepDesign({ values, update, isPro }: Props) {
               className="font-mono w-32 h-10"
             />
             <div className="flex items-center gap-1.5">
-              {['#6366f1', '#f43f5e', '#f97316', '#22c55e', '#06b6d4', '#a855f7', '#eab308', '#000000'].map(c => (
+              {['#f43f5e', '#f59e0b', '#6366f1', '#10b981', '#f97316', '#06b6d4', '#a855f7', '#000000'].map(c => (
                 <button
                   key={c}
                   onClick={() => update({ accent_color: c })}

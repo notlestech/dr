@@ -2,9 +2,9 @@
 
 import { useTransition, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { publishForm, deleteForm, closeForm } from '@/actions/forms'
+import { publishForm, deleteForm, closeForm, reopenForm } from '@/actions/forms'
 import { Button } from '@/components/ui/button'
-import { Globe, Trash2, Loader2, ExternalLink, XCircle } from 'lucide-react'
+import { Globe, Trash2, Loader2, ExternalLink, XCircle, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface Props {
@@ -16,9 +16,10 @@ interface Props {
 
 export function FormDetailActions({ formId, status, subdomain, isPro }: Props) {
   const router = useRouter()
-  const [isPub,   startPub]   = useTransition()
-  const [isClose, startClose] = useTransition()
-  const [isDel,   startDel]   = useTransition()
+  const [isPub,    startPub]    = useTransition()
+  const [isClose,  startClose]  = useTransition()
+  const [isReopen, startReopen] = useTransition()
+  const [isDel,    startDel]    = useTransition()
   const [confirming, setConfirming] = useState(false)
 
   function handlePublish() {
@@ -35,6 +36,15 @@ export function FormDetailActions({ formId, status, subdomain, isPro }: Props) {
       const res = await closeForm(formId)
       if ('error' in res && res.error) { toast.error(res.error); return }
       toast.success('Form closed')
+      router.refresh()
+    })
+  }
+
+  function handleReopen() {
+    startReopen(async () => {
+      const res = await reopenForm(formId)
+      if ('error' in res && res.error) { toast.error(res.error); return }
+      toast.success('Form reopened')
       router.refresh()
     })
   }
@@ -64,6 +74,13 @@ export function FormDetailActions({ formId, status, subdomain, isPro }: Props) {
         <Button size="sm" variant="outline" className="gap-1.5 text-muted-foreground" onClick={handleClose} disabled={isClose}>
           {isClose ? <Loader2 className="size-3.5 animate-spin" /> : <XCircle className="size-3.5" />}
           Close form
+        </Button>
+      )}
+
+      {status === 'closed' && (
+        <Button size="sm" variant="outline" className="gap-1.5" onClick={handleReopen} disabled={isReopen}>
+          {isReopen ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
+          Reopen
         </Button>
       )}
 

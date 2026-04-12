@@ -63,15 +63,29 @@ export async function createForm(values: FormWizardValues) {
   return { formId: form.id, subdomain: form.subdomain }
 }
 
+/** Returns the caller's workspace_id, or null if unauthenticated / no workspace. */
+async function getCallerWorkspaceId(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
+  const { data: membership } = await supabase
+    .from('workspace_members')
+    .select('workspace_id')
+    .eq('user_id', userId)
+    .single()
+  return membership?.workspace_id ?? null
+}
+
 export async function publishForm(formId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
+  const workspaceId = await getCallerWorkspaceId(supabase, user.id)
+  if (!workspaceId) return { error: 'Not authorized' }
+
   const { error } = await supabase
     .from('forms')
     .update({ status: 'active' })
     .eq('id', formId)
+    .eq('workspace_id', workspaceId)   // ownership check
 
   if (error) return { error: error.message }
   revalidatePath('/forms')
@@ -81,7 +95,38 @@ export async function publishForm(formId: string) {
 
 export async function closeForm(formId: string) {
   const supabase = await createClient()
-  const { error } = await supabase.from('forms').update({ status: 'closed' }).eq('id', formId)
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const workspaceId = await getCallerWorkspaceId(supabase, user.id)
+  if (!workspaceId) return { error: 'Not authorized' }
+
+  const { error } = await supabase
+    .from('forms')
+    .update({ status: 'closed' })
+    .eq('id', formId)
+    .eq('workspace_id', workspaceId)   // ownership check
+
+  if (error) return { error: error.message }
+  revalidatePath('/forms')
+  revalidatePath(`/forms/${formId}`)
+  return { success: true }
+}
+
+export async function reopenForm(formId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const workspaceId = await getCallerWorkspaceId(supabase, user.id)
+  if (!workspaceId) return { error: 'Not authorized' }
+
+  const { error } = await supabase
+    .from('forms')
+    .update({ status: 'active' })
+    .eq('id', formId)
+    .eq('workspace_id', workspaceId)   // ownership check
+
   if (error) return { error: error.message }
   revalidatePath('/forms')
   revalidatePath(`/forms/${formId}`)
@@ -90,7 +135,18 @@ export async function closeForm(formId: string) {
 
 export async function deleteForm(formId: string) {
   const supabase = await createClient()
-  const { error } = await supabase.from('forms').delete().eq('id', formId)
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const workspaceId = await getCallerWorkspaceId(supabase, user.id)
+  if (!workspaceId) return { error: 'Not authorized' }
+
+  const { error } = await supabase
+    .from('forms')
+    .delete()
+    .eq('id', formId)
+    .eq('workspace_id', workspaceId)   // ownership check
+
   if (error) return { error: error.message }
   redirect('/forms')
 }

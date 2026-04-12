@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { render } from '@react-email/components'
 import { WinnerNotificationEmail } from '@/emails/winner-notification'
 import { getResend, FROM_EMAIL } from '@/lib/resend'
+import { fireWebhook } from '@/lib/webhook'
 import type { FormField } from '@/types/app'
 
 function getServiceClient() {
@@ -42,7 +43,8 @@ export async function POST(request: NextRequest) {
     .eq('id', body.formId)
     .single()
 
-  if (!form || (membership && form.workspace_id !== membership.workspace_id)) {
+  // Both conditions must pass: user has a workspace AND the form belongs to it
+  if (!form || !membership || form.workspace_id !== membership.workspace_id) {
     return NextResponse.json({ error: 'Form not found' }, { status: 404 })
   }
 
@@ -126,19 +128,13 @@ export async function POST(request: NextRequest) {
 
   // --- Webhook notification ---
   if (form.webhook_url) {
-    const payload = {
+    fireWebhook(form.webhook_url, {
       event: 'draw.winner',
       form: { id: form.id, name: form.name, subdomain: form.subdomain },
       draw: { id: draw.id, drawn_at: draw.drawn_at },
       entry: { id: entry.id },
       timestamp: new Date().toISOString(),
-    }
-    fetch(form.webhook_url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'User-Agent': 'DrawVault-Webhook/1.0' },
-      body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(8000),
-    }).catch(() => { /* Webhook failures are silent */ })
+    })
   }
 
   return NextResponse.json({ success: true, drawId: draw.id })

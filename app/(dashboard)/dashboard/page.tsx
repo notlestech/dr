@@ -8,6 +8,12 @@ import { formatNumber, timeAgo } from '@/lib/utils'
 import type { Form, Plan } from '@/types/app'
 import { UpgradeToast } from '@/components/dashboard/upgrade-toast'
 
+interface RecentDraw {
+  id: string
+  drawn_at: string
+  forms: { name: string; accent_color: string } | null
+}
+
 export const metadata = { title: 'Dashboard' }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -28,12 +34,19 @@ async function getData(userId: string) {
   if (!membership) return null
   const wid = membership.workspace_id
 
-  const [{ data: forms }, { data: recentDraws }, { data: profile }, { data: sub }] = await Promise.all([
+  // Use allSettled so a single failing query doesn't crash the entire dashboard
+  const [formsRes, drawsRes, profileRes, subRes] = await Promise.allSettled([
     supabase.from('forms').select('*').eq('workspace_id', wid).order('updated_at', { ascending: false }).limit(3),
-    supabase.from('draws').select('*, forms(name, accent_color)').order('drawn_at', { ascending: false }).limit(5),
+    supabase.from('draws').select('id, drawn_at, forms(name, accent_color)').eq('forms.workspace_id', wid).order('drawn_at', { ascending: false }).limit(5),
     supabase.from('profiles').select('full_name').eq('id', userId).single(),
     supabase.from('subscriptions').select('plan').eq('workspace_id', wid).maybeSingle(),
   ])
+
+  const forms      = formsRes.status   === 'fulfilled' ? formsRes.value.data   : null
+  const rawDraws   = drawsRes.status   === 'fulfilled' ? drawsRes.value.data   : null
+  const profile    = profileRes.status === 'fulfilled' ? profileRes.value.data : null
+  const sub        = subRes.status     === 'fulfilled' ? subRes.value.data     : null
+  const recentDraws: RecentDraw[] = (rawDraws ?? []) as RecentDraw[]
   const plan = (sub?.plan ?? 'free') as Plan
 
   const formList = (forms ?? []) as Form[]
@@ -225,7 +238,7 @@ export default async function DashboardPage() {
         <div className="space-y-3">
           <p className="text-sm font-medium">Recent draws</p>
           <div className="divide-y border rounded-xl overflow-hidden">
-            {(recentDraws as any[]).map(draw => (
+            {recentDraws.map(draw => (
               <div key={draw.id} className="flex items-center gap-3 px-4 py-3">
                 <div
                   className="size-6 rounded-full flex items-center justify-center shrink-0"

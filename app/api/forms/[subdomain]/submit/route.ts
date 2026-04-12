@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import crypto from 'crypto'
+import { fireWebhook } from '@/lib/webhook'
 
 function getSupabase() {
   return createClient(
@@ -136,18 +137,12 @@ export async function POST(
 
   // Fire webhook (non-blocking — failure does not affect the response)
   if (form.webhook_url) {
-    const payload = {
+    fireWebhook(form.webhook_url, {
       event: 'entry.created',
       form: { id: form.id, name: form.name, subdomain: form.subdomain },
       entry: { id: inserted?.id, data: body.data, source: 'web' },
       timestamp: new Date().toISOString(),
-    }
-    fetch(form.webhook_url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'User-Agent': 'DrawVault-Webhook/1.0' },
-      body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(8000),
-    }).catch(() => { /* Webhook failures are silent */ })
+    })
   }
 
   return NextResponse.json({ success: true })

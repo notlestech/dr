@@ -5,12 +5,14 @@ export async function proxy(request: NextRequest) {
   const host = request.headers.get('host') ?? ''
   const appDomain = process.env.NEXT_PUBLIC_APP_URL?.replace('https://', '').replace('http://', '') ?? 'drawvault.site'
 
-  // Subdomain detection — only in production
+  // Subdomain detection — only rewrite root path to /f/[subdomain]
+  // API routes and other paths must pass through unchanged so that fetches
+  // from the public form page (e.g. /api/forms/[subdomain]/submit) work.
   if (host !== appDomain && host !== `www.${appDomain}` && !host.includes('localhost') && !host.includes('vercel.app')) {
     const subdomain = host.replace(`.${appDomain}`, '')
-    if (subdomain && subdomain !== 'www') {
+    if (subdomain && subdomain !== 'www' && request.nextUrl.pathname === '/') {
       const url = request.nextUrl.clone()
-      url.pathname = `/f/${subdomain}${request.nextUrl.pathname === '/' ? '' : request.nextUrl.pathname}`
+      url.pathname = `/f/${subdomain}`
       return NextResponse.rewrite(url)
     }
   }
