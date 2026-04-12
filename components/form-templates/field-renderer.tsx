@@ -74,6 +74,8 @@ export function FieldRenderer({ field, register, errors, inputClassName = '', la
     : COUNTRY_CODES
 
   if (field.type === 'phone') {
+    const inputId = `field-${field.id}`
+    const errorId = `field-${field.id}-error`
     const { onChange: rhfOnChange, ref, onBlur, name } = register(field.id, {
       required: field.required && `${field.label} is required`,
     })
@@ -93,9 +95,10 @@ export function FieldRenderer({ field, register, errors, inputClassName = '', la
 
     return (
       <div className="space-y-1.5">
-        <label className={`block text-sm font-medium ${labelClassName}`}>
+        <label htmlFor={inputId} className={`block text-sm font-medium ${labelClassName}`}>
           {field.label}
-          {field.required && <span className="text-red-400 ml-1">*</span>}
+          {field.required && <span className="text-destructive ml-1" aria-hidden="true">*</span>}
+          {field.required && <span className="sr-only">(required)</span>}
         </label>
         <div className="flex">
           <select
@@ -113,6 +116,7 @@ export function FieldRenderer({ field, register, errors, inputClassName = '', la
             ))}
           </select>
           <input
+            id={inputId}
             ref={ref}
             name={name}
             onBlur={onBlur}
@@ -120,26 +124,35 @@ export function FieldRenderer({ field, register, errors, inputClassName = '', la
             value={phoneNumber}
             onChange={handleNumberChange}
             placeholder={field.placeholder ?? '555-0100'}
+            aria-describedby={error ? errorId : undefined}
+            aria-invalid={!!error}
             className={`${baseInput} rounded-l-none`}
           />
         </div>
         {error && (
-          <p className="text-red-400 text-xs">{error.message as string}</p>
+          <p id={errorId} role="alert" className="text-destructive text-xs">{error.message as string}</p>
         )}
       </div>
     )
   }
 
+  const inputId = `field-${field.id}`
+  const errorId = `field-${field.id}-error`
+
   return (
     <div className="space-y-1.5">
-      <label className={`block text-sm font-medium ${labelClassName}`}>
+      <label htmlFor={inputId} className={`block text-sm font-medium ${labelClassName}`}>
         {field.label}
-        {field.required && <span className="text-red-400 ml-1">*</span>}
+        {field.required && <span className="text-destructive ml-1" aria-hidden="true">*</span>}
+        {field.required && <span className="sr-only">(required)</span>}
       </label>
 
       {field.type === 'dropdown' ? (
         <select
+          id={inputId}
           {...register(field.id, { required: field.required && `${field.label} is required` })}
+          aria-describedby={error ? errorId : undefined}
+          aria-invalid={!!error}
           className={baseInput}
         >
           <option value="">{field.placeholder || 'Select an option'}</option>
@@ -150,26 +163,32 @@ export function FieldRenderer({ field, register, errors, inputClassName = '', la
       ) : field.type === 'checkbox' ? (
         <div className="flex items-center gap-2">
           <input
+            id={inputId}
             type="checkbox"
             {...register(field.id, { required: field.required && `${field.label} is required` })}
+            aria-describedby={error ? errorId : undefined}
+            aria-invalid={!!error}
             className="w-4 h-4 accent-indigo-600"
           />
           <span className={`text-sm ${labelClassName}`}>{field.placeholder || field.label}</span>
         </div>
       ) : (
         <input
+          id={inputId}
           type={field.type === 'email' ? 'email' : field.type === 'number' ? 'number' : 'text'}
           placeholder={field.placeholder}
           {...register(field.id, {
             required: field.required && `${field.label} is required`,
             ...(field.type === 'email' && { pattern: { value: /\S+@\S+\.\S+/, message: 'Invalid email' } }),
           })}
+          aria-describedby={error ? errorId : undefined}
+          aria-invalid={!!error}
           className={baseInput}
         />
       )}
 
       {error && (
-        <p className="text-red-400 text-xs">{error.message as string}</p>
+        <p id={errorId} role="alert" className="text-destructive text-xs">{error.message as string}</p>
       )}
     </div>
   )

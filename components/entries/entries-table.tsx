@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
-import { Download, Flag, Trophy, Search, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Download, Flag, Trophy, Search, X, ChevronLeft, ChevronRight, Share2 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import type { Form, Entry } from '@/types/app'
 
@@ -39,10 +39,16 @@ export function EntriesTable({ form, entries: initial, totalCount }: Props) {
   }
 
   async function flag(entry: Entry) {
+    // Optimistic update
+    setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, flagged: !e.flagged } : e))
     const supabase = createClient()
     const { error } = await supabase.from('entries').update({ flagged: !entry.flagged }).eq('id', entry.id)
-    if (error) { toast.error(error.message); return }
-    setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, flagged: !e.flagged } : e))
+    if (error) {
+      // Rollback on failure
+      setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, flagged: entry.flagged } : e))
+      toast.error(error.message)
+      return
+    }
     toast.success(entry.flagged ? 'Entry unflagged' : 'Entry flagged')
   }
 
@@ -66,6 +72,12 @@ export function EntriesTable({ form, entries: initial, totalCount }: Props) {
     a.download = `${form.subdomain}-entries.csv`
     a.click()
     URL.revokeObjectURL(url)
+    const isPartial = totalCount !== undefined && totalCount > entries.length
+    toast.success(
+      isPartial
+        ? `Exported ${filtered.length.toLocaleString()} entries (first ${entries.length.toLocaleString()} of ${totalCount!.toLocaleString()} total)`
+        : `Exported ${filtered.length.toLocaleString()} entries`
+    )
   }
 
   return (
@@ -112,8 +124,27 @@ export function EntriesTable({ form, entries: initial, totalCount }: Props) {
             <tbody className="divide-y divide-border">
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={form.fields.length + 3} className="px-4 py-10 text-center text-muted-foreground text-sm">
-                    {search ? 'No entries match your search' : 'No entries yet'}
+                  <td colSpan={form.fields.length + 3} className="px-4 py-12 text-center">
+                    {search ? (
+                      <p className="text-muted-foreground text-sm">No entries match your search</p>
+                    ) : (
+                      <div className="space-y-3">
+                        <Share2 className="w-8 h-8 text-muted-foreground/40 mx-auto" aria-hidden="true" />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">No entries yet</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Share your form to start collecting entries
+                          </p>
+                        </div>
+                        <a
+                          href={`/forms/${form.id}`}
+                          className="inline-flex items-center gap-1.5 text-xs font-medium underline underline-offset-4 hover:no-underline text-foreground"
+                        >
+                          <Share2 className="w-3 h-3" aria-hidden="true" />
+                          Go to sharing options
+                        </a>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ) : paginated.map(e => (
@@ -128,10 +159,20 @@ export function EntriesTable({ form, entries: initial, totalCount }: Props) {
                   ))}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
-                      {e.is_winner && <Trophy className="w-3.5 h-3.5 text-yellow-500" />}
-                      {e.flagged && <Flag className="w-3.5 h-3.5 text-destructive" />}
+                      {e.is_winner && (
+                        <>
+                          <Trophy className="w-3.5 h-3.5 text-yellow-500 shrink-0" aria-hidden="true" />
+                          <span className="text-xs font-medium text-yellow-600 dark:text-yellow-400">Winner</span>
+                        </>
+                      )}
+                      {e.flagged && !e.is_winner && (
+                        <>
+                          <Flag className="w-3.5 h-3.5 text-destructive shrink-0" aria-hidden="true" />
+                          <span className="text-xs font-medium text-destructive">Flagged</span>
+                        </>
+                      )}
                       {!e.is_winner && !e.flagged && (
-                        <span className="text-xs text-muted-foreground">{e.status}</span>
+                        <span className="text-xs text-muted-foreground capitalize">{e.status}</span>
                       )}
                     </div>
                   </td>
@@ -141,10 +182,11 @@ export function EntriesTable({ form, entries: initial, totalCount }: Props) {
                   <td className="px-4 py-3">
                     <button
                       onClick={() => flag(e)}
-                      className="text-muted-foreground hover:text-foreground transition-colors"
+                      className={`transition-colors ${e.flagged ? 'text-destructive hover:text-muted-foreground' : 'text-muted-foreground hover:text-destructive'}`}
+                      aria-label={e.flagged ? 'Unflag entry' : 'Flag entry'}
                       title={e.flagged ? 'Unflag' : 'Flag'}
                     >
-                      <Flag className="w-3.5 h-3.5" />
+                      <Flag className="w-3.5 h-3.5" aria-hidden="true" />
                     </button>
                   </td>
                 </tr>

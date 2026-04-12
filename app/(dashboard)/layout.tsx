@@ -50,6 +50,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <SidebarProvider>
+      {/* Skip to main content — keyboard / screen reader shortcut */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:ring-2 focus:ring-ring focus:outline-none"
+      >
+        Skip to main content
+      </a>
       <PlanAccentBg plan={plan} />
       <AppSidebar
         workspace={workspace}
@@ -70,9 +77,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </Breadcrumb>
           <ThemeToggle />
         </header>
-        <div className="flex flex-1 flex-col pb-20 md:pb-0">
+        <main id="main-content" className="flex flex-1 flex-col pb-20 md:pb-0">
           {children}
-        </div>
+        </main>
       </SidebarInset>
       <MobileNav plan={plan} />
     </SidebarProvider>

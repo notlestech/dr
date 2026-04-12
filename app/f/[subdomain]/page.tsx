@@ -13,7 +13,7 @@ function getSupabase() {
 
 export async function generateMetadata({ params }: { params: Promise<{ subdomain: string }> }): Promise<Metadata> {
   const { subdomain } = await params
-  const { data: form } = await getSupabase().from('forms').select('name, description').eq('subdomain', subdomain).single()
+  const { data: form } = await getSupabase().from('forms').select('name, description').eq('subdomain', subdomain).neq('status', 'draft').single()
   return {
     title: form?.name ?? 'Enter the Draw',
     description: form?.description ?? 'Enter for a chance to win.',
@@ -30,6 +30,7 @@ export default async function PublicFormPage({ params }: { params: Promise<{ sub
     .from('forms')
     .select('id, name, description, subdomain, template, draw_theme, accent_color, logo_url, fields, status, max_entries, require_captcha, social_sharing, show_entry_count, winners_page, raffle_type, starts_at, ends_at')
     .eq('subdomain', subdomain)
+    .neq('status', 'draft')   // drafts are not publicly visible
     .single()
 
   if (!form) notFound()

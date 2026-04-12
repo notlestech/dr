@@ -15,6 +15,7 @@ import { StepSettings } from './step-settings'
 import { StepReview }   from './step-review'
 import { ArrowLeft, ArrowRight, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
 const STEPS = [
@@ -40,11 +41,15 @@ interface Props {
   plan: string
 }
 
-const STORAGE_KEY = 'drawvault_wizard_draft'
+const STORAGE_KEY      = 'drawvault_wizard_draft'
+const STEP_STORAGE_KEY = 'drawvault_wizard_step'
 
 export function FormWizard({ isPro, plan }: Props) {
   const router = useRouter()
-  const [step, setStep]       = useState(0)
+  const [step, setStep]       = useState(() => {
+    if (typeof window === 'undefined') return 0
+    try { return Number(localStorage.getItem(STEP_STORAGE_KEY) ?? 0) } catch { return 0 }
+  })
   const [direction, setDir]   = useState(1)
   const [saving, setSaving]   = useState(false)
   const [createdFormId, setCreatedFormId] = useState<string | null>(null)
@@ -57,9 +62,24 @@ export function FormWizard({ isPro, plan }: Props) {
     } catch { return DEFAULT_WIZARD_VALUES }
   })
 
+  // Persist form values
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(values))
   }, [values])
+
+  // Persist step index
+  useEffect(() => {
+    localStorage.setItem(STEP_STORAGE_KEY, String(step))
+  }, [step])
+
+  // Warn before tab close / hard refresh when there is unsaved work
+  const isDirty = values.name.length > 0 || values.fields.length !== DEFAULT_WIZARD_VALUES.fields.length
+  useEffect(() => {
+    if (!isDirty) return
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault() }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [isDirty])
 
   function update(payload: Partial<FormWizardValues>) {
     dispatch({ type: 'SET', payload })
@@ -71,7 +91,12 @@ export function FormWizard({ isPro, plan }: Props) {
   }
 
   function goBack() {
-    if (step === 0) { router.push('/forms'); return }
+    if (step === 0) {
+      if (isDirty && !window.confirm('You have unsaved work. Leave and discard it?')) return
+      localStorage.removeItem(STEP_STORAGE_KEY)
+      router.push('/forms')
+      return
+    }
     setDir(-1)
     setStep(s => Math.max(s - 1, 0))
   }
@@ -94,6 +119,17 @@ export function FormWizard({ isPro, plan }: Props) {
     }
   }
 
+  function disabledReason(): string | null {
+    if (canProceed()) return null
+    switch (step) {
+      case 0: return 'Enter a form name (at least 2 characters)'
+      case 1: return 'Pick a design template'
+      case 2: return 'Add at least one field'
+      case 5: return values.name.length < 2 ? 'Form name too short' : 'Subdomain must be at least 3 characters'
+      default: return null
+    }
+  }
+
   async function handlePublish() {
     setSaving(true)
     try {
@@ -107,6 +143,7 @@ export function FormWizard({ isPro, plan }: Props) {
       const pub = await publishForm(formId!)
       if (pub.error) { toast.error(pub.error); setSaving(false); return }
       localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem(STEP_STORAGE_KEY)
       toast.success('Form published!')
       router.push(`/forms/${formId}`)
     } catch {
@@ -122,6 +159,7 @@ export function FormWizard({ isPro, plan }: Props) {
     setSaving(false)
     if (result.error) { toast.error(result.error); return }
     localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(STEP_STORAGE_KEY)
     toast.success('Draft saved')
     router.push(`/forms/${result.formId}`)
   }
@@ -142,8 +180,13 @@ export function FormWizard({ isPro, plan }: Props) {
         <div className={cn('mx-auto px-6 py-4 flex items-center gap-4', step === 1 || step === 5 ? 'max-w-5xl' : 'max-w-2xl')}>
           {/* Cancel */}
           <button
-            onClick={() => router.push('/forms')}
+            onClick={() => {
+              if (isDirty && !window.confirm('You have unsaved work. Leave and discard it?')) return
+              localStorage.removeItem(STEP_STORAGE_KEY)
+              router.push('/forms')
+            }}
             className="text-muted-foreground hover:text-foreground transition-colors p-1"
+            aria-label="Cancel and leave wizard"
           >
             <X className="size-4" />
           </button>
@@ -242,16 +285,27 @@ export function FormWizard({ isPro, plan }: Props) {
                 Save draft
               </Button>
             )}
-            <Button
-              size="sm"
-              className="gap-1.5 min-w-[100px]"
-              onClick={isLast ? handlePublish : goNext}
-              disabled={saving || !canProceed()}
-            >
-              {isLast
-                ? (saving ? 'Publishing…' : 'Go live')
-                : (<>Next <ArrowRight className="size-3.5" /></>)}
-            </Button>
+            <Tooltip>
+              <TooltipTrigger
+                render={<span className={!canProceed() ? 'cursor-not-allowed' : undefined} />}
+              >
+                <Button
+                  size="sm"
+                  className="gap-1.5 min-w-[100px]"
+                  onClick={isLast ? handlePublish : goNext}
+                  disabled={saving || !canProceed()}
+                >
+                  {isLast
+                    ? (saving ? 'Publishing…' : 'Go live')
+                    : (<>Next <ArrowRight className="size-3.5" /></>)}
+                </Button>
+              </TooltipTrigger>
+              {disabledReason() && (
+                <TooltipContent side="top">
+                  {disabledReason()}
+                </TooltipContent>
+              )}
+            </Tooltip>
           </div>
         </div>
       </div>

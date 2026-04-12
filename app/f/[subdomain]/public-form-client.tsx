@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import Script from 'next/script'
 import { createClient } from '@/lib/supabase/client'
 import { FormTemplateRenderer } from '@/components/form-templates'
-import { Lock, ExternalLink } from 'lucide-react'
+import { Lock, ExternalLink, X } from 'lucide-react'
 import type { PublicForm } from '@/types/app'
 
 interface Props {
@@ -97,19 +97,24 @@ export function PublicFormClient({ form, initialEntryCount, embedded }: Props) {
 
   if (form.status === 'closed') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div
+        className="min-h-screen bg-background flex items-center justify-center p-6"
+        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+      >
         <div className="text-center max-w-sm">
           <div className="size-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
             <Lock className="size-6 text-muted-foreground" />
           </div>
           <h1 className="text-xl font-semibold mb-2">{form.name}</h1>
-          <p className="text-muted-foreground text-sm">This raffle is now closed.</p>
+          <p className="text-muted-foreground text-sm">
+            Entries for this raffle are no longer being accepted.
+          </p>
           {form.winners_page && (
             <a
               href={`/winners/${form.subdomain}`}
               className="mt-4 inline-block text-sm font-medium underline underline-offset-4 hover:no-underline"
             >
-              View winners
+              View draw results
             </a>
           )}
         </div>
@@ -125,8 +130,8 @@ export function PublicFormClient({ form, initialEntryCount, embedded }: Props) {
   const followLinks = form.fields.filter(f => f.type === 'follow_link')
 
   return (
-    <>
-      {/* Cloudflare Turnstile — always visible widget */}
+    <div style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      {/* Cloudflare Turnstile — compact widget anchored above safe area */}
       {form.require_captcha && (
         <>
           <Script
@@ -134,14 +139,33 @@ export function PublicFormClient({ form, initialEntryCount, embedded }: Props) {
             strategy="lazyOnload"
           />
           <div
-            className="cf-turnstile fixed bottom-4 right-4 z-50"
+            className="cf-turnstile fixed z-50"
+            style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))', right: '1rem' }}
             data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
             data-callback="__dvTurnstileCallback"
             data-expired-callback="__dvTurnstileExpired"
             data-appearance="always"
+            data-size="compact"
             data-theme="auto"
           />
         </>
+      )}
+
+      {/* Submission error banner — sticky, dismissible */}
+      {error && (
+        <div
+          role="alert"
+          className="sticky top-0 z-50 w-full bg-destructive text-destructive-foreground text-sm px-4 py-3 flex items-center justify-between gap-3"
+        >
+          <span>{error}</span>
+          <button
+            onClick={() => setError(null)}
+            aria-label="Dismiss error"
+            className="shrink-0 opacity-70 hover:opacity-100 transition-opacity"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
       )}
 
       {/* Follow links banner */}
@@ -167,13 +191,6 @@ export function PublicFormClient({ form, initialEntryCount, embedded }: Props) {
         </div>
       )}
 
-      {/* Submission error banner */}
-      {error && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-destructive text-destructive-foreground text-sm px-5 py-3 rounded-xl shadow-lg max-w-sm text-center">
-          {error}
-        </div>
-      )}
-
       <FormTemplateRenderer
         form={form}
         fields={form.fields}
@@ -182,6 +199,6 @@ export function PublicFormClient({ form, initialEntryCount, embedded }: Props) {
         isSubmitting={isSubmitting}
         isSuccess={isSuccess}
       />
-    </>
+    </div>
   )
 }

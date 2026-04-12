@@ -5,7 +5,12 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Trophy, Maximize, RotateCcw, Save, Users, Shuffle, Loader2, CheckCircle2, ArrowLeft, RotateCw, CreditCard, Lock, Sparkles } from 'lucide-react'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { Trophy, Maximize, RotateCcw, Save, Users, Shuffle, Loader2, CheckCircle2, ArrowLeft, RotateCw, CreditCard, Lock, Sparkles, Copy, ClipboardCheck, History } from 'lucide-react'
 import { formatNumber } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { WheelDraw } from '@/components/draw/wheel-draw'
@@ -41,6 +46,7 @@ export function DrawClient({ form, entries: initialEntries, userId, isPro, isBus
   const [phase, setPhase]    = useState<'idle' | 'spinning' | 'revealed' | 'saved'>('idle')
   const [winner, setWinner]  = useState<Entry | null>(null)
   const [saving, setSaving]  = useState(false)
+  const [copied, setCopied]  = useState(false)
   const containerRef         = useRef<HTMLDivElement>(null)
   const accent               = form.accent_color
 
@@ -129,7 +135,16 @@ export function DrawClient({ form, entries: initialEntries, userId, isPro, isBus
     setPhase('idle')
     setWinner(null)
     setReelItems([])
+    setCopied(false)
     pendingWinner.current = null
+  }
+
+  function copyWinner() {
+    if (!winner) return
+    navigator.clipboard.writeText(winner.displayName).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
   }
 
   function toggleFullscreen() {
@@ -196,10 +211,18 @@ export function DrawClient({ form, entries: initialEntries, userId, isPro, isBus
       <div className="flex-1 flex flex-col items-center justify-center p-8 gap-10">
 
         {entries.length === 0 ? (
-          <div className="text-center">
-            <Users className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-            <p className="text-lg font-medium text-muted-foreground">No entries yet</p>
-            <p className="text-sm text-muted-foreground mt-1">Share your form to start collecting entries.</p>
+          <div className="text-center space-y-4">
+            <Users className="w-12 h-12 text-muted-foreground/30 mx-auto" aria-hidden="true" />
+            <div>
+              <p className="text-lg font-medium text-foreground">No entries yet</p>
+              <p className="text-sm text-muted-foreground mt-1">Share your form to start collecting entries.</p>
+            </div>
+            <button
+              onClick={() => router.push(`/forms/${form.id}`)}
+              className="inline-flex items-center gap-1.5 text-sm font-medium underline underline-offset-4 hover:no-underline text-foreground"
+            >
+              Go to sharing options
+            </button>
           </div>
         ) : (
           <>
@@ -298,11 +321,24 @@ export function DrawClient({ form, entries: initialEntries, userId, isPro, isBus
                       animate={{ rotate: [0, -15, 15, -10, 10, 0] }}
                       transition={{ delay: 0.2, duration: 0.6 }}
                     >
-                      <Trophy className="w-5 h-5 text-yellow-500" />
+                      <Trophy className="w-5 h-5 text-yellow-500" aria-hidden="true" />
                     </motion.div>
                     <span className="text-sm font-semibold uppercase tracking-widest text-yellow-500">Winner</span>
                   </div>
-                  <p className="text-4xl font-bold tracking-tight">{winner.displayName}</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <p className="text-4xl font-bold tracking-tight">{winner.displayName}</p>
+                    <button
+                      onClick={copyWinner}
+                      aria-label="Copy winner name"
+                      title="Copy name"
+                      className="text-muted-foreground hover:text-foreground transition-colors mt-1 shrink-0"
+                    >
+                      {copied
+                        ? <ClipboardCheck className="w-4 h-4 text-emerald-500" />
+                        : <Copy className="w-4 h-4" />
+                      }
+                    </button>
+                  </div>
                   {phase === 'saved' && (
                     <motion.div
                       initial={{ opacity: 0 }}
@@ -368,24 +404,54 @@ export function DrawClient({ form, entries: initialEntries, userId, isPro, isBus
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  className="flex items-center gap-3"
+                  className="flex flex-wrap items-center justify-center gap-3"
                 >
                   <Button variant="outline" size="lg" onClick={reset} className="h-12 gap-2">
                     <RotateCcw className="w-4 h-4" /> Draw Again
                   </Button>
+
                   {phase === 'revealed' && (
-                    <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                      <Button
-                        size="lg"
-                        onClick={saveDraw}
-                        disabled={saving}
-                        className="h-12 gap-2 text-white"
-                        style={{ backgroundColor: accent }}
+                    <AlertDialog>
+                      <AlertDialogTrigger
+                        render={
+                          <motion.button
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
+                            disabled={saving}
+                            className="h-12 px-6 rounded-xl text-sm font-medium text-white flex items-center gap-2 disabled:opacity-50"
+                            style={{ backgroundColor: accent }}
+                          />
+                        }
                       >
                         <Save className="w-4 h-4" />
                         {saving ? 'Saving…' : 'Save Winner'}
-                      </Button>
-                    </motion.div>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Save &ldquo;{winner?.displayName}&rdquo; as winner?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will record them in your draw history and send a winner notification email if configured. You can draw again afterwards.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={saveDraw} className="gap-2">
+                            <Save className="w-4 h-4" /> Confirm Winner
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+
+                  {phase === 'saved' && (
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => router.push(`/forms/${form.id}/draws`)}
+                      className="h-12 gap-2"
+                    >
+                      <History className="w-4 h-4" /> View History
+                    </Button>
                   )}
                 </motion.div>
               )}
