@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { AdBanner } from '@/components/dashboard/ad-banner'
+import { DashboardFooter } from '@/components/dashboard/dashboard-footer'
 import type { Plan } from '@/types/app'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AppSidebar } from '@/components/dashboard/app-sidebar'
@@ -131,6 +132,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {/* Center content */}
           <div className="flex flex-1 flex-col min-w-0">
             {children}
+            <DashboardFooter plan={plan as Plan} />
           </div>
 
           {/* Right ad column — only on wide screens, free plan only */}

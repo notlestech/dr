@@ -9,6 +9,7 @@ import { FormDetailActions } from '@/components/forms/form-detail-actions'
 import { Users, Trophy, BarChart2, Settings, Dice5, ExternalLink, Clock, History } from 'lucide-react'
 import { formatNumber, timeAgo } from '@/lib/utils'
 import type { Form } from '@/types/app'
+import { AdBanner } from '@/components/dashboard/ad-banner'
 
 interface Props { params: Promise<{ formId: string }> }
 
@@ -115,6 +116,11 @@ export default async function FormOverviewPage({ params }: Props) {
             <p className="text-2xl font-bold">{value}</p>
           </div>
         ))}
+      </div>
+
+      {/* Inline ad — mobile/tablet only, free plan only */}
+      <div className="2xl:hidden">
+        <AdBanner plan={isPro ? 'pro' : 'free'} />
       </div>
 
       {/* Quick nav */}
