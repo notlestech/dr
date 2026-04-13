@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation'
-import Script from 'next/script'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AppSidebar } from '@/components/dashboard/app-sidebar'
@@ -92,15 +91,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <SidebarProvider>
-      {/* AdSense — only load for free plan users */}
-      {plan === 'free' && (
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7840488343669346"
-          crossOrigin="anonymous"
-          strategy="lazyOnload"
-        />
-      )}
       {/* Skip to main content — keyboard / screen reader shortcut */}
       <a
         href="#main-content"
