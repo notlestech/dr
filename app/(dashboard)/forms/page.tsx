@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button'
 import { FormRowActions } from '@/components/forms/form-row-actions'
 import { Plus, Layers, ExternalLink, Dice5, Settings, Clock } from 'lucide-react'
 import { timeAgo } from '@/lib/utils'
-import type { Form, Plan } from '@/types/app'
-import { AdBanner } from '@/components/dashboard/ad-banner'
+import type { Form } from '@/types/app'
 
 export const metadata = { title: 'Forms' }
 
@@ -25,13 +24,10 @@ export default async function FormsPage() {
     .from('workspace_members').select('workspace_id').eq('user_id', user.id).single()
   if (!membership) redirect('/login')
 
-  const [{ data: forms }, { data: sub }] = await Promise.all([
-    supabase.from('forms').select('*').eq('workspace_id', membership.workspace_id).order('created_at', { ascending: false }),
-    supabase.from('subscriptions').select('plan').eq('workspace_id', membership.workspace_id).maybeSingle(),
-  ])
+  const { data: forms } = await supabase
+    .from('forms').select('*').eq('workspace_id', membership.workspace_id).order('created_at', { ascending: false })
 
   const formList = (forms ?? []) as Form[]
-  const plan = (sub?.plan ?? 'free') as Plan
 
   return (
     <div className="flex flex-col gap-8 p-6 md:p-10 max-w-3xl mx-auto w-full">
@@ -52,9 +48,6 @@ export default async function FormsPage() {
           </Button>
         </Link>
       </div>
-
-      {/* Ad — free plan only, between header and list */}
-      <AdBanner plan={plan} />
 
       {/* Empty state */}
       {formList.length === 0 ? (

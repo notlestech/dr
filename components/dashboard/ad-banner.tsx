@@ -15,32 +15,33 @@ declare global {
   }
 }
 
-export function AdBanner({ plan, slot = '0000000000' }: Props) {
+const PLACEHOLDER = '0000000000'
+
+export function AdBanner({ plan, slot = '8572604713' }: Props) {
   const pushed = useRef(false)
 
   useEffect(() => {
-    if (pushed.current) return
+    // Don't push until we have a real slot ID
+    if (pushed.current || slot === PLACEHOLDER) return
     try {
       ;(window.adsbygoogle = window.adsbygoogle || []).push({})
       pushed.current = true
     } catch {
       // adsbygoogle not loaded yet
     }
-  }, [])
+  }, [slot])
 
-  // Paid users never see ads
-  if (plan !== 'free') return null
+  // Paid users never see ads; also skip if slot not yet configured
+  if (plan !== 'free' || slot === PLACEHOLDER) return null
 
   return (
-    <div className="ads w-full overflow-hidden rounded-xl border border-dashed border-border/50 bg-muted/20 min-h-[90px] flex items-center justify-center">
-      <ins
-        className="adsbygoogle"
-        style={{ display: 'block', width: '100%', minHeight: '90px' }}
-        data-ad-client="ca-pub-7840488343669346"
-        data-ad-slot={slot}
-        data-ad-format="auto"
-        data-full-width-responsive="true"
-      />
-    </div>
+    <ins
+      className="adsbygoogle"
+      style={{ display: 'block', width: '100%' }}
+      data-ad-client="ca-pub-7840488343669346"
+      data-ad-slot={slot}
+      data-ad-format="auto"
+      data-full-width-responsive="true"
+    />
   )
 }

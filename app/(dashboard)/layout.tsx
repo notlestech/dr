@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { AdBanner } from '@/components/dashboard/ad-banner'
+import type { Plan } from '@/types/app'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AppSidebar } from '@/components/dashboard/app-sidebar'
 import { MobileNav } from '@/components/dashboard/mobile-nav'
@@ -118,8 +120,25 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </Breadcrumb>
           <ThemeToggle />
         </header>
-        <main id="main-content" className="flex flex-1 flex-col pb-20 md:pb-0">
-          {children}
+        <main id="main-content" className="flex flex-1 pb-20 md:pb-0">
+          {/* Left ad column — only on wide screens, free plan only */}
+          <div className="ads hidden 2xl:flex flex-col items-center pt-10 px-2 w-[180px] shrink-0">
+            <div className="sticky top-10 w-full">
+              <AdBanner plan={plan as Plan} slot="8572604713" />
+            </div>
+          </div>
+
+          {/* Center content */}
+          <div className="flex flex-1 flex-col min-w-0">
+            {children}
+          </div>
+
+          {/* Right ad column — only on wide screens, free plan only */}
+          <div className="ads hidden 2xl:flex flex-col items-center pt-10 px-2 w-[180px] shrink-0">
+            <div className="sticky top-10 w-full">
+              <AdBanner plan={plan as Plan} slot="8572604713" />
+            </div>
+          </div>
         </main>
       </SidebarInset>
       <MobileNav plan={plan} />
