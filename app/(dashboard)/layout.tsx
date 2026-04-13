@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { AppSidebar } from '@/components/dashboard/app-sidebar'
 import { MobileNav } from '@/components/dashboard/mobile-nav'
 import { ThemeToggle } from '@/components/dashboard/theme-toggle'
@@ -38,13 +39,42 @@ async function getLayoutData(userId: string) {
   return { workspace, plan: sub?.plan ?? 'free', fullName: profile?.full_name ?? null }
 }
 
+async function provisionWorkspace(userId: string, email: string) {
+  const admin = createAdminClient()
+  const slug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-')
+
+  const { data: workspace } = await admin
+    .from('workspaces')
+    .insert({ name: 'My Workspace', slug })
+    .select('id')
+    .single()
+
+  if (!workspace) return false
+
+  await Promise.all([
+    admin.from('workspace_members').insert({ workspace_id: workspace.id, user_id: userId, role: 'owner' }),
+    admin.from('profiles').upsert({ id: userId, full_name: null }),
+    admin.from('subscriptions').insert({ workspace_id: workspace.id, plan: 'free' }),
+  ])
+
+  return true
+}
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const data = await getLayoutData(user.id)
-  if (!data) redirect('/login')
+  let data = await getLayoutData(user.id)
+
+  // Workspace missing — provision one on-demand (accounts created before the
+  // signup fix, or where the signup workspace creation failed)
+  if (!data) {
+    const ok = await provisionWorkspace(user.id, user.email ?? '')
+    if (!ok) redirect('/login')
+    data = await getLayoutData(user.id)
+    if (!data) redirect('/login')
+  }
 
   const { workspace, plan, fullName } = data
 
