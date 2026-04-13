@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Layers, Settings, ChevronsUpDown,
-  LogOut, Trophy, Plus, Sparkles,
+  LogOut, Trophy, Plus, Sparkles, CreditCard,
 } from 'lucide-react'
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup,
@@ -27,8 +27,9 @@ const NAV_MAIN = [
 ]
 
 const NAV_SECONDARY = [
+  { title: 'Billing',  url: '/billing',  icon: CreditCard },
   { title: 'Settings', url: '/settings', icon: Settings },
-  { title: 'Upgrade', url: '/upgrade', icon: Sparkles },
+  { title: 'Upgrade',  url: '/upgrade',  icon: Sparkles },
 ]
 
 const PLAN_BADGE: Record<Plan, { label: string; className: string; headerClass: string; nameClass: string }> = {
