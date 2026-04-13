@@ -41,21 +41,32 @@ async function getLayoutData(userId: string) {
 
 async function provisionWorkspace(userId: string, email: string) {
   const admin = createAdminClient()
-  const slug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-')
+  const baseSlug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-')
+  // Append random suffix to avoid unique constraint conflicts from partial prior attempts
+  const suffix = Math.random().toString(36).slice(2, 7)
+  const slug = `${baseSlug}-${suffix}`
 
-  const { data: workspace } = await admin
+  const { data: workspace, error: wsError } = await admin
     .from('workspaces')
     .insert({ name: 'My Workspace', slug })
     .select('id')
     .single()
 
-  if (!workspace) return false
+  if (wsError || !workspace) {
+    console.error('[provisionWorkspace] workspace insert failed:', wsError?.message)
+    return false
+  }
 
-  await Promise.all([
-    admin.from('workspace_members').insert({ workspace_id: workspace.id, user_id: userId, role: 'owner' }),
+  const [memberRes, profileRes, subRes] = await Promise.all([
+    admin.from('workspace_members').upsert({ workspace_id: workspace.id, user_id: userId, role: 'owner' }, { onConflict: 'workspace_id,user_id' }),
     admin.from('profiles').upsert({ id: userId, full_name: null }),
-    admin.from('subscriptions').insert({ workspace_id: workspace.id, plan: 'free' }),
+    admin.from('subscriptions').upsert({ workspace_id: workspace.id, plan: 'free' }, { onConflict: 'workspace_id' }),
   ])
+
+  if (memberRes.error || profileRes.error || subRes.error) {
+    console.error('[provisionWorkspace] record insert failed:', memberRes.error?.message, profileRes.error?.message, subRes.error?.message)
+    return false
+  }
 
   return true
 }

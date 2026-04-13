@@ -87,7 +87,9 @@ export async function verifyOtpAndCreateAccount(
 
   // Provision workspace, profile, and free subscription
   const workspaceName = fullName ? `${fullName.split(' ')[0]}'s Workspace` : 'My Workspace'
-  const workspaceSlug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-')
+  const baseSlug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-')
+  const suffix = Math.random().toString(36).slice(2, 7)
+  const workspaceSlug = `${baseSlug}-${suffix}`
 
   const { data: workspace, error: wsError } = await supabase
     .from('workspaces')
@@ -102,23 +104,23 @@ export async function verifyOtpAndCreateAccount(
   }
 
   // Create workspace member, profile, and free subscription in parallel
-  const [memberRes, profileRes] = await Promise.all([
-    supabase.from('workspace_members').insert({
+  const [memberRes, profileRes, subRes] = await Promise.all([
+    supabase.from('workspace_members').upsert({
       workspace_id: workspace.id,
       user_id: userId,
       role: 'owner',
-    }),
-    supabase.from('profiles').insert({
+    }, { onConflict: 'workspace_id,user_id' }),
+    supabase.from('profiles').upsert({
       id: userId,
       full_name: fullName,
     }),
-    supabase.from('subscriptions').insert({
+    supabase.from('subscriptions').upsert({
       workspace_id: workspace.id,
       plan: 'free',
-    }),
+    }, { onConflict: 'workspace_id' }),
   ])
 
-  if (memberRes.error || profileRes.error) {
+  if (memberRes.error || profileRes.error || subRes.error) {
     await supabase.auth.admin.deleteUser(userId)
     return { error: 'Failed to set up account. Please try again.' }
   }
