@@ -138,7 +138,7 @@ export default function SignupPage() {
       return
     }
     toast.success('Welcome to DrawVault!')
-    router.push('/dashboard')
+    window.location.href = '/dashboard'
   }
 
   async function handleResend() {

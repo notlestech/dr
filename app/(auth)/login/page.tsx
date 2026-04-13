@@ -81,7 +81,7 @@ export default function LoginPage() {
       setLoading(false)
       return
     }
-    router.push('/dashboard')
+    window.location.href = '/dashboard'
   }
 
   async function handleGoogle() {
