@@ -4,8 +4,13 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import Script from 'next/script'
 import { createClient } from '@/lib/supabase/client'
 import { FormTemplateRenderer } from '@/components/form-templates'
-import { Lock, ExternalLink, X } from 'lucide-react'
-import type { PublicForm } from '@/types/app'
+import { Lock, ExternalLink, CheckCircle2, X } from 'lucide-react'
+import type { PublicForm, FormField } from '@/types/app'
+
+function normalizeUrl(url: string | null | undefined): string {
+  if (!url) return '#'
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`
+}
 
 interface Props {
   form: PublicForm
@@ -27,6 +32,17 @@ export function PublicFormClient({ form, initialEntryCount, embedded }: Props) {
   const [isSuccess, setIsSuccess]       = useState(false)
   const [error, setError]               = useState<string | null>(null)
   const turnstileTokenRef               = useRef<string | null>(null)
+
+  // Follow-link gate
+  const followLinks: FormField[] = form.fields.filter(f => f.type === 'follow_link')
+  const formFields                = form.fields.filter(f => f.type !== 'follow_link')
+  const [followedIds, setFollowedIds] = useState<Set<string>>(new Set())
+  const allFollowed = followLinks.length === 0 || followLinks.every(f => followedIds.has(f.id))
+
+  function handleFollowClick(field: FormField) {
+    window.open(normalizeUrl(field.placeholder), '_blank', 'noopener,noreferrer')
+    setFollowedIds(prev => new Set([...prev, field.id]))
+  }
 
   // Live entry count via Supabase Realtime
   useEffect(() => {
@@ -122,12 +138,53 @@ export function PublicFormClient({ form, initialEntryCount, embedded }: Props) {
     )
   }
 
-  function normalizeUrl(url: string | null | undefined): string {
-    if (!url) return '#'
-    return /^https?:\/\//i.test(url) ? url : `https://${url}`
+  // Follow gate — shown before the form when follow_link fields exist and not all clicked
+  if (!allFollowed) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="w-full max-w-sm space-y-6 text-center">
+          {form.logo_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={form.logo_url} alt={form.name} className="h-10 object-contain mx-auto" />
+          )}
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight">{form.name}</h1>
+            {form.description && (
+              <p className="text-sm text-muted-foreground">{form.description}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground">
+              Follow to participate:
+            </p>
+            <div className="flex flex-col gap-3">
+              {followLinks.map(link => {
+                const done = followedIds.has(link.id)
+                return (
+                  <button
+                    key={link.id}
+                    type="button"
+                    onClick={() => handleFollowClick(link)}
+                    disabled={done}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-sm font-medium transition-all ${
+                      done
+                        ? 'opacity-60 cursor-default bg-muted'
+                        : 'bg-background hover:bg-muted active:scale-[0.98] cursor-pointer'
+                    }`}
+                  >
+                    <span>{link.label || link.placeholder}</span>
+                    {done
+                      ? <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
+                      : <ExternalLink className="size-4 shrink-0 text-muted-foreground" />}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
-
-  const followLinks = form.fields.filter(f => f.type === 'follow_link')
 
   return (
     <div style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
@@ -168,32 +225,9 @@ export function PublicFormClient({ form, initialEntryCount, embedded }: Props) {
         </div>
       )}
 
-      {/* Follow links banner */}
-      {followLinks.length > 0 && (
-        <div className="w-full bg-muted/60 border-b px-4 py-3">
-          <p className="text-xs font-medium text-muted-foreground mb-2 text-center">
-            Follow to participate:
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {followLinks.map(link => (
-              <a
-                key={link.id}
-                href={normalizeUrl(link.placeholder)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border bg-background hover:bg-muted transition-colors"
-              >
-                <ExternalLink className="size-3" />
-                {link.label || link.placeholder}
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
-
       <FormTemplateRenderer
         form={form}
-        fields={form.fields}
+        fields={formFields}
         entryCount={entryCount}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}

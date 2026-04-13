@@ -1,14 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { ExternalLink, CheckCircle2 } from 'lucide-react'
 import { UseFormRegister, FieldErrors } from 'react-hook-form'
 import type { FormField } from '@/types/app'
-
-function normalizeUrl(url: string | null | undefined): string {
-  if (!url) return '#'
-  return /^https?:\/\//i.test(url) ? url : `https://${url}`
-}
 
 interface Props {
   field: FormField
@@ -71,52 +65,12 @@ export function FieldRenderer({ field, register, errors, inputClassName = '', la
   const baseInput = `w-full px-4 py-3 rounded-lg text-sm outline-none transition-all ${inputClassName}`
   const error = errors[field.id]
 
-  // Hooks must be called unconditionally
   const [phonePrefix, setPhonePrefix] = useState(getDefaultDial(field.phoneCountry))
   const [phoneNumber, setPhoneNumber] = useState('')
-  const [followClicked, setFollowClicked] = useState(false)
 
   const visibleCountries = field.phoneCountry
     ? COUNTRY_CODES.filter(c => c.code === field.phoneCountry)
     : COUNTRY_CODES
-
-  if (field.type === 'follow_link') {
-    const followErrorId = `field-${field.id}-error`
-    const registered = register(field.id, {
-      validate: (v: string) =>
-        !field.required || v === 'followed' || `Follow ${field.label} to continue`,
-    })
-
-    function handleFollow() {
-      window.open(normalizeUrl(field.placeholder), '_blank', 'noopener,noreferrer')
-      setFollowClicked(true)
-      registered.onChange({
-        target: { name: registered.name, value: 'followed' },
-      } as React.ChangeEvent<HTMLInputElement>)
-    }
-
-    return (
-      <div className="space-y-1.5">
-        <input type="hidden" ref={registered.ref} name={registered.name} onBlur={registered.onBlur} />
-        <button
-          type="button"
-          onClick={handleFollow}
-          disabled={followClicked}
-          className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all border ${inputClassName} ${
-            followClicked ? 'opacity-60 cursor-default' : 'cursor-pointer hover:opacity-80 active:scale-[0.98]'
-          }`}
-        >
-          <span>{field.label || 'Follow'}</span>
-          {followClicked
-            ? <CheckCircle2 className="size-4 shrink-0 text-emerald-500" />
-            : <ExternalLink className="size-4 shrink-0" />}
-        </button>
-        {error && (
-          <p id={followErrorId} role="alert" className="text-destructive text-xs">{error.message as string}</p>
-        )}
-      </div>
-    )
-  }
 
   if (field.type === 'phone') {
     const inputId = `field-${field.id}`
