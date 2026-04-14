@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
-import { Gift, Rocket, Award, Building2 } from 'lucide-react'
+import { Gift, Rocket, Award, Building2, Star, Swords } from 'lucide-react'
 import type { FormWizardValues } from '@/lib/validations/form'
 
 interface Props {
@@ -16,7 +16,7 @@ interface Props {
 }
 
 interface RaffleTypeInfo {
-  id: 'giveaway' | 'earlyaccess' | 'contest' | 'internal'
+  id: 'giveaway' | 'earlyaccess' | 'contest' | 'internal' | 'loyalty' | 'tournament'
   label: string
   desc: string
   badge: string
@@ -80,6 +80,32 @@ const RAFFLE_TYPES: RaffleTypeInfo[] = [
       summary: 'A private raffle for your team — not meant for public audiences.',
       fields: ['Full name', 'Employee ID'],
       bestFor: 'HR raffles, team events, employee appreciation',
+    },
+  },
+  {
+    id: 'loyalty',
+    label: 'Loyalty Reward',
+    desc: 'Reward your best customers',
+    badge: 'Premium',
+    icon: Star,
+    color: '#f59e0b',
+    tooltip: {
+      summary: 'Run an exclusive prize draw for loyal customers or members.',
+      fields: ['Email address', 'Full name', 'Membership / Order ID (optional)'],
+      bestFor: 'Customer rewards, VIP programs, repeat-buyer incentives',
+    },
+  },
+  {
+    id: 'tournament',
+    label: 'Tournament',
+    desc: 'Bracket seeding for competitions',
+    badge: 'Gaming',
+    icon: Swords,
+    color: '#6366f1',
+    tooltip: {
+      summary: 'Randomly seed players or teams into a bracket for your next tournament.',
+      fields: ['Player / Team name', 'Contact email', 'Rank / Seed (optional)'],
+      bestFor: 'Esports tournaments, local competitions, bracket draws',
     },
   },
 ]

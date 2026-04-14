@@ -10,12 +10,14 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Trophy, Maximize, RotateCcw, Save, Users, Shuffle, Loader2, CheckCircle2, ArrowLeft, RotateCw, CreditCard, Lock, Sparkles, Copy, ClipboardCheck, History } from 'lucide-react'
+import { Trophy, Maximize, RotateCcw, Save, Users, Shuffle, Loader2, CheckCircle2, ArrowLeft, RotateCw, CreditCard, Lock, Sparkles, Copy, ClipboardCheck, History, Dice5, Zap } from 'lucide-react'
 import { formatNumber } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { WheelDraw } from '@/components/draw/wheel-draw'
 import { CardsDraw } from '@/components/draw/cards-draw'
 import { SpotlightDraw } from '@/components/draw/spotlight-draw'
+import { DiceDraw } from '@/components/draw/dice-draw'
+import { BurstDraw } from '@/components/draw/burst-draw'
 
 interface Entry { id: string; displayName: string }
 interface Form  { id: string; name: string; accent_color: string; draw_theme: string; status: string; subdomain: string }
@@ -25,6 +27,8 @@ const DRAW_THEMES = [
   { id: 'slot',      label: 'Slot',      icon: Shuffle,    free: true,  pro: true,  business: true  },
   { id: 'wheel',     label: 'Wheel',     icon: RotateCw,   free: false, pro: true,  business: true  },
   { id: 'cards',     label: 'Cards',     icon: CreditCard, free: false, pro: true,  business: true  },
+  { id: 'dice',      label: 'Dice',      icon: Dice5,      free: false, pro: true,  business: true  },
+  { id: 'burst',     label: 'Burst',     icon: Zap,        free: false, pro: true,  business: true  },
   { id: 'spotlight', label: 'Spotlight', icon: Sparkles,   free: false, pro: false, business: true  },
 ] as const
 
@@ -251,7 +255,8 @@ export function DrawClient({ form, entries: initialEntries, userId, isPro, isBus
                       key={spinKey}
                       initial={{ y: 0 }}
                       animate={{ y: targetY }}
-                      transition={{ duration: 4.8, ease: [0.12, 0.0, 0.08, 1.0] }}
+                      // ease-out quart — pure deceleration, never overshoots
+                      transition={{ duration: 4.8, ease: [0.25, 1, 0.5, 1] }}
                       onAnimationComplete={onSlotComplete}
                     >
                       {reelItems.map((entry, i) => {
@@ -286,6 +291,28 @@ export function DrawClient({ form, entries: initialEntries, userId, isPro, isBus
             {/* === CARDS === */}
             {drawTheme === 'cards' && (
               <CardsDraw
+                entries={entries}
+                accent={accent}
+                winner={winner}
+                isSpinning={phase === 'spinning'}
+                onComplete={onAnimationComplete}
+              />
+            )}
+
+            {/* === DICE === */}
+            {drawTheme === 'dice' && (
+              <DiceDraw
+                entries={entries}
+                accent={accent}
+                winner={winner}
+                isSpinning={phase === 'spinning'}
+                onComplete={onAnimationComplete}
+              />
+            )}
+
+            {/* === BURST === */}
+            {drawTheme === 'burst' && (
+              <BurstDraw
                 entries={entries}
                 accent={accent}
                 winner={winner}

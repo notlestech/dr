@@ -14,7 +14,7 @@ export const fieldSchema = z.object({
 export const formWizardSchema = z.object({
   // Step 1 — template + basics
   template: z.enum(['clean', 'neon', 'gradient', 'party', 'luxury', 'brutal', 'glass', 'split', 'arcade', 'conversational', 'terminal', 'holographic']),
-  raffle_type: z.enum(['giveaway', 'earlyaccess', 'contest', 'internal']),
+  raffle_type: z.enum(['giveaway', 'earlyaccess', 'contest', 'internal', 'loyalty', 'tournament']),
   name: z.string().min(2, 'Name must be at least 2 characters').max(80),
   description: z.string().max(300).optional(),
   subdomain: z
@@ -39,7 +39,7 @@ export const formWizardSchema = z.object({
   show_entry_count: z.boolean(),
   winners_page: z.boolean(),
   require_confirmation: z.boolean(),
-  draw_theme: z.enum(['slot', 'wheel', 'cards', 'dice', 'spotlight']).default('slot'),
+  draw_theme: z.enum(['slot', 'wheel', 'cards', 'dice', 'burst', 'spotlight']).default('slot'),
 })
 
 export type FormWizardValues = z.infer<typeof formWizardSchema>
@@ -116,5 +116,29 @@ export const RAFFLE_TYPE_PRESETS = {
     accent_color: '#10b981',
     template: 'clean' as const,
     draw_theme: 'dice' as const,
+  },
+  loyalty: {
+    name: 'Loyalty Reward',
+    description: 'Thank your loyal customers with an exclusive prize draw.',
+    fields: [
+      { id: 'email', type: 'email' as const, label: 'Email address', placeholder: 'you@example.com', required: true },
+      { id: 'name', type: 'text' as const, label: 'Full name', placeholder: 'Your name', required: true },
+      { id: 'member_id', type: 'text' as const, label: 'Membership / Order ID', placeholder: 'e.g. ORD-12345', required: false },
+    ],
+    accent_color: '#f59e0b',
+    template: 'luxury' as const,
+    draw_theme: 'cards' as const,
+  },
+  tournament: {
+    name: 'Tournament Draw',
+    description: 'Random bracket seeding for your next tournament.',
+    fields: [
+      { id: 'name', type: 'text' as const, label: 'Player / Team name', placeholder: 'e.g. Team Rocket', required: true },
+      { id: 'email', type: 'email' as const, label: 'Contact email', placeholder: 'captain@team.com', required: true },
+      { id: 'rank', type: 'text' as const, label: 'Rank / Seed (optional)', placeholder: 'e.g. Gold III', required: false },
+    ],
+    accent_color: '#6366f1',
+    template: 'arcade' as const,
+    draw_theme: 'burst' as const,
   },
 }
