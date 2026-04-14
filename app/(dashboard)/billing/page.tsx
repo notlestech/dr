@@ -65,15 +65,17 @@ export default async function BillingPage() {
 
   const wid = membership.workspace_id
 
-  const [{ data: sub }, { data: forms }, { count: totalEntries }] = await Promise.all([
+  const [{ data: sub }, { data: forms }] = await Promise.all([
     supabase.from('subscriptions').select('*').eq('workspace_id', wid).maybeSingle(),
     supabase.from('forms').select('*, entries(count)').eq('workspace_id', wid).order('created_at', { ascending: false }),
-    supabase.from('entries').select('*', { count: 'exact', head: true }).in(
-      'form_id',
-      // subquery workaround: fetch form ids first, fallback to empty
-      forms?.map(f => f.id) ?? ['00000000-0000-0000-0000-000000000000'],
-    ),
   ])
+
+  // Fetch entry count separately so we can use the resolved form IDs
+  const formIds = forms?.map(f => f.id) ?? ['00000000-0000-0000-0000-000000000000']
+  const { count: totalEntries } = await supabase
+    .from('entries')
+    .select('*', { count: 'exact', head: true })
+    .in('form_id', formIds)
 
   const plan   = (sub?.plan ?? 'free') as Plan
   const limits = PLAN_LIMITS[plan]

@@ -96,6 +96,7 @@ export default function LoginPage() {
     if (error) {
       toast.error(error.message)
       setLoading(false)
+      resetTurnstile()
       return
     }
     window.location.href = '/dashboard'
