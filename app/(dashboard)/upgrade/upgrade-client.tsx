@@ -28,8 +28,8 @@ const PLANS = [
     key: 'pro_monthly' as PlanKey,
     planId: 'pro' as const,
     name: 'Pro',
-    monthlyPrice: 9,
-    yearlyPrice: 79,
+    monthlyPrice: 2.5,
+    yearlyPrice: 21,
     description: 'For creators & streamers',
     features: ['Unlimited forms', '10,000 entries per form', '10 fields per form', 'Unlimited draws', 'All 10 templates', 'No branding', 'Analytics + CSV export'],
     cta: 'Upgrade to Pro',
@@ -41,8 +41,8 @@ const PLANS = [
     key: 'business_monthly' as PlanKey,
     planId: 'business' as const,
     name: 'Business',
-    monthlyPrice: 29,
-    yearlyPrice: 249,
+    monthlyPrice: 5,
+    yearlyPrice: 42,
     description: 'For agencies & companies',
     features: ['Everything in Pro', 'Unlimited entries', '3 workspaces', 'Auto-draw scheduling', 'Webhooks', 'Audit logs', 'Priority support'],
     cta: 'Upgrade to Business',
@@ -163,7 +163,9 @@ export function UpgradeClient({ currentPlan }: Props) {
                   ) : (
                     <>
                       <span className="text-3xl font-bold">
-                        ${yearly ? Math.round(plan.yearlyPrice / 12) : plan.monthlyPrice}
+                        ${yearly
+                          ? (plan.yearlyPrice / 12).toFixed(2).replace(/\.00$/, '')
+                          : plan.monthlyPrice.toFixed(2).replace(/\.00$/, '')}
                       </span>
                       <span className="text-sm text-muted-foreground">/mo</span>
                     </>

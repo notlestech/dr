@@ -18,6 +18,11 @@ declare global {
   interface Window {
     __loginTurnstileCb?: (token: string) => void
     __loginTurnstileExpired?: () => void
+    __loginTurnstileReady?: (widgetId: string) => void
+    turnstile?: {
+      reset: (widgetId?: string) => void
+      render: (container: string | HTMLElement, params: Record<string, unknown>) => string
+    }
   }
 }
 
@@ -29,10 +34,19 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [showPassword, setShowPassword]   = useState(false)
   const [turnstileDone, setTurnstileDone] = useState(false)
-  const tokenRef = useRef<string | null>(null)
+  const tokenRef    = useRef<string | null>(null)
+  const widgetIdRef = useRef<string | null>(null)
 
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
+
+  const resetTurnstile = () => {
+    tokenRef.current = null
+    setTurnstileDone(false)
+    if (window.turnstile && widgetIdRef.current !== null) {
+      window.turnstile.reset(widgetIdRef.current)
+    }
+  }
 
   useEffect(() => {
     window.__loginTurnstileCb = (token: string) => {
@@ -40,13 +54,17 @@ export default function LoginPage() {
       setTurnstileDone(true)
     }
     window.__loginTurnstileExpired = () => {
-      tokenRef.current = null
-      setTurnstileDone(false)
+      resetTurnstile()
+    }
+    window.__loginTurnstileReady = (widgetId: string) => {
+      widgetIdRef.current = widgetId
     }
     return () => {
       delete window.__loginTurnstileCb
       delete window.__loginTurnstileExpired
+      delete window.__loginTurnstileReady
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function handleLogin(e: React.FormEvent) {
@@ -67,8 +85,7 @@ export default function LoginPage() {
       const { success } = await res.json()
       if (!success) {
         toast.error('Bot check failed — please try again')
-        setTurnstileDone(false)
-        tokenRef.current = null
+        resetTurnstile()
         return
       }
     }
@@ -228,6 +245,7 @@ export default function LoginPage() {
                 data-sitekey={siteKey}
                 data-callback="__loginTurnstileCb"
                 data-expired-callback="__loginTurnstileExpired"
+                data-before-interactive-callback="__loginTurnstileReady"
                 data-theme="auto"
                 data-size="normal"
               />
