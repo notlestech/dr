@@ -7,23 +7,18 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/dashboard'
 
+  console.log('[auth/callback] hit — code present:', !!code, '| origin:', origin)
+
   if (!code) {
-    return NextResponse.redirect(`${origin}/login`)
+    console.error('[auth/callback] No code found in URL')
+    return NextResponse.redirect(`${origin}/login?cb_error=no_code`)
   }
 
   const cookieStore = await cookies()
+  const allCookies = cookieStore.getAll()
+  console.log('[auth/callback] Incoming cookies:', allCookies.map(c => c.name))
 
-  // Determine the redirect URL before creating the response
-  const forwardedHost = request.headers.get('x-forwarded-host')
-  const isLocalEnv = process.env.NODE_ENV === 'development'
-  const redirectUrl = isLocalEnv
-    ? `${origin}${next}`
-    : forwardedHost
-    ? `https://${forwardedHost}${next}`
-    : `${origin}${next}`
-
-  // Build the redirect response first so we can attach cookies to it
-  const response = NextResponse.redirect(redirectUrl)
+  const response = NextResponse.redirect(`${origin}${next}`)
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,9 +28,8 @@ export async function GET(request: Request) {
         getAll() {
           return cookieStore.getAll()
         },
-        // In Route Handlers, cookies MUST be written onto the response object
-        // (not via cookieStore.set), otherwise they are silently dropped.
         setAll(cookiesToSet) {
+          console.log('[auth/callback] Setting cookies:', cookiesToSet.map(c => c.name))
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options)
           })
@@ -44,12 +38,15 @@ export async function GET(request: Request) {
     }
   )
 
-  const { error } = await supabase.auth.exchangeCodeForSession(code)
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
-    console.error('[auth/callback] exchangeCodeForSession error:', error.message)
-    return NextResponse.redirect(`${origin}/login`)
+    console.error('[auth/callback] exchangeCodeForSession error:', error.message, error.status)
+    return NextResponse.redirect(
+      `${origin}/login?cb_error=${encodeURIComponent(error.message)}`
+    )
   }
 
+  console.log('[auth/callback] Session exchanged OK — user:', data.session?.user?.email)
   return response
 }

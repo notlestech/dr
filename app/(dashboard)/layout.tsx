@@ -76,18 +76,29 @@ async function provisionWorkspace(userId: string, email: string) {
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (!user) {
+    console.error('[dashboard/layout] getUser returned null — error:', userError?.message)
+    redirect('/login')
+  }
 
+  console.log('[dashboard/layout] user found:', user.email)
   let data = await getLayoutData(user.id)
 
   // Workspace missing — provision one on-demand (accounts created before the
   // signup fix, or where the signup workspace creation failed)
   if (!data) {
+    console.log('[dashboard/layout] no workspace found — provisioning for:', user.email)
     const ok = await provisionWorkspace(user.id, user.email ?? '')
-    if (!ok) redirect('/login')
+    if (!ok) {
+      console.error('[dashboard/layout] provisionWorkspace failed for:', user.email)
+      redirect('/login')
+    }
     data = await getLayoutData(user.id)
-    if (!data) redirect('/login')
+    if (!data) {
+      console.error('[dashboard/layout] getLayoutData still null after provision for:', user.email)
+      redirect('/login')
+    }
   }
 
   const { workspace, plan, fullName } = data

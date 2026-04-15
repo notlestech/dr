@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { motion } from 'motion/react'
 import Script from 'next/script'
@@ -38,6 +39,15 @@ export default function LoginPage() {
   const widgetIdRef = useRef<string | null>(null)
 
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+  const searchParams = useSearchParams()
+
+  // Show callback errors as toast so we can diagnose redirect loops
+  useEffect(() => {
+    const cbError = searchParams.get('cb_error')
+    if (cbError) {
+      toast.error(`Auth error: ${cbError}`)
+    }
+  }, [searchParams])
 
 
   const resetTurnstile = () => {
