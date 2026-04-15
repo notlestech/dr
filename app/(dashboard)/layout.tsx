@@ -42,7 +42,7 @@ async function getLayoutData(userId: string) {
   return { workspace, plan: sub?.plan ?? 'free', fullName: profile?.full_name ?? null }
 }
 
-async function provisionWorkspace(userId: string, email: string) {
+async function provisionWorkspace(userId: string, email: string): Promise<string | null> {
   const admin = createAdminClient()
   const baseSlug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-')
   // Append random suffix to avoid unique constraint conflicts from partial prior attempts
@@ -56,8 +56,9 @@ async function provisionWorkspace(userId: string, email: string) {
     .single()
 
   if (wsError || !workspace) {
-    console.error('[provisionWorkspace] workspace insert failed:', wsError?.message)
-    return false
+    const msg = `workspace_insert: ${wsError?.message ?? 'unknown'}`
+    console.error('[provisionWorkspace]', msg)
+    return msg
   }
 
   const [memberRes, profileRes, subRes] = await Promise.all([
@@ -66,12 +67,14 @@ async function provisionWorkspace(userId: string, email: string) {
     admin.from('subscriptions').upsert({ workspace_id: workspace.id, plan: 'free' }, { onConflict: 'workspace_id' }),
   ])
 
-  if (memberRes.error || profileRes.error || subRes.error) {
-    console.error('[provisionWorkspace] record insert failed:', memberRes.error?.message, profileRes.error?.message, subRes.error?.message)
-    return false
+  const secondaryErr = memberRes.error ?? profileRes.error ?? subRes.error
+  if (secondaryErr) {
+    const msg = `member_insert: ${secondaryErr.message}`
+    console.error('[provisionWorkspace]', msg)
+    return msg
   }
 
-  return true
+  return null
 }
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -89,15 +92,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // signup fix, or where the signup workspace creation failed)
   if (!data) {
     console.log('[dashboard/layout] no workspace found — provisioning for:', user.email)
-    const ok = await provisionWorkspace(user.id, user.email ?? '')
-    if (!ok) {
-      console.error('[dashboard/layout] provisionWorkspace failed for:', user.email)
-      redirect('/login')
+    const provisionErr = await provisionWorkspace(user.id, user.email ?? '')
+    if (provisionErr) {
+      console.error('[dashboard/layout] provisionWorkspace failed for:', user.email, provisionErr)
+      redirect(`/login?cb_error=${encodeURIComponent('Provision failed: ' + provisionErr)}`)
     }
     data = await getLayoutData(user.id)
     if (!data) {
       console.error('[dashboard/layout] getLayoutData still null after provision for:', user.email)
-      redirect('/login')
+      redirect(`/login?cb_error=${encodeURIComponent('Workspace not found after provision')}`)
     }
   }
 
