@@ -51,7 +51,7 @@ async function provisionWorkspace(userId: string, email: string): Promise<string
 
   const { data: workspace, error: wsError } = await admin
     .from('workspaces')
-    .insert({ name: 'My Workspace', slug })
+    .insert({ name: 'My Workspace', slug, owner_id: userId })
     .select('id')
     .single()
 
