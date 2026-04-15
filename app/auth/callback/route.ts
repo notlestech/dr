@@ -6,18 +6,20 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/dashboard'
 
-  if (code) {
-    const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    
-    if (!error) {
-      const forwardedHost = request.headers.get('x-forwarded-host')
-      const isLocalEnv = process.env.NODE_ENV === 'development'
-      const redirectUrl = isLocalEnv ? `${origin}${next}` : forwardedHost ? `https://${forwardedHost}${next}` : `${origin}${next}`
-      
-      return NextResponse.redirect(redirectUrl)
-    }
+  if (!code) {
+    return NextResponse.redirect(`${origin}/login?error=missing_code_in_callback`)
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`)
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+  
+  if (error) {
+    return NextResponse.redirect(`${origin}/login?error=exchange_failed&msg=${encodeURIComponent(error.message)}`)
+  }
+
+  const forwardedHost = request.headers.get('x-forwarded-host')
+  const isLocalEnv = process.env.NODE_ENV === 'development'
+  const redirectUrl = isLocalEnv ? `${origin}${next}` : forwardedHost ? `https://${forwardedHost}${next}` : `${origin}${next}`
+  
+  return NextResponse.redirect(redirectUrl)
 }
