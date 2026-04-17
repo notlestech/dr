@@ -13,7 +13,7 @@ function getSupabase() {
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const subdomain = searchParams.get('form')
+  const subdomain = searchParams.get('subdomain')
 
   let formName = 'DrawVault Giveaway'
   let accent = '#6366f1'
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     const supabase = getSupabase()
     const { data: form } = await supabase
       .from('forms')
-      .select('name, accent_color')
+      .select('id, name, accent_color')
       .eq('subdomain', subdomain)
       .single()
 
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
       const { count } = await supabase
         .from('entries')
         .select('*', { count: 'exact', head: true })
-        .eq('form_id', subdomain)
+        .eq('form_id', form.id)
 
       entryCount = count ?? 0
     }

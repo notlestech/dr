@@ -14,11 +14,23 @@ function getSupabase() {
 export async function generateMetadata({ params }: { params: Promise<{ subdomain: string }> }): Promise<Metadata> {
   const { subdomain } = await params
   const { data: form } = await getSupabase().from('forms').select('name, description').eq('subdomain', subdomain).neq('status', 'draft').single()
+  const title = form?.name ?? 'Enter the Draw'
+  const description = form?.description ?? 'Enter for a chance to win.'
+  const ogImage = `/api/og?subdomain=${subdomain}`
   return {
-    title: form?.name ?? 'Enter the Draw',
-    description: form?.description ?? 'Enter for a chance to win.',
+    title,
+    description,
     openGraph: {
-      images: [`/api/og?subdomain=${subdomain}`],
+      type: 'website',
+      title,
+      description,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage],
     },
   }
 }

@@ -14,11 +14,11 @@ export type FormTemplate =
   | 'terminal'
   | 'holographic'
 
-export type DrawTheme = 'slot' | 'wheel' | 'cards' | 'dice' | 'burst' | 'spotlight'
+export type DrawTheme = 'slot' | 'wheel' | 'cards' | 'dice' | 'burst' | 'spotlight' | 'picker'
 
 export type FormStatus = 'draft' | 'active' | 'closed'
 
-export type RaffleType = 'giveaway' | 'earlyaccess' | 'contest' | 'internal' | 'loyalty' | 'tournament'
+export type RaffleType = 'giveaway' | 'earlyaccess' | 'contest' | 'internal' | 'loyalty' | 'tournament' | 'referral'
 
 export type FieldType = 'email' | 'text' | 'phone' | 'dropdown' | 'checkbox' | 'number' | 'follow_link'
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useReducer, useEffect, useState } from 'react'
+import { useReducer, useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
 import { toast } from 'sonner'
@@ -52,6 +52,7 @@ export function FormWizard({ isPro, plan }: Props) {
   })
   const [direction, setDir]   = useState(1)
   const [saving, setSaving]   = useState(false)
+  const [showErrors, setShowErrors] = useState(false)
   const [createdFormId, setCreatedFormId] = useState<string | null>(null)
 
   const [values, dispatch] = useReducer(wizardReducer, DEFAULT_WIZARD_VALUES, () => {
@@ -86,6 +87,11 @@ export function FormWizard({ isPro, plan }: Props) {
   }
 
   function goNext() {
+    if (!canProceed()) {
+      setShowErrors(true)
+      return
+    }
+    setShowErrors(false)
     setDir(1)
     setStep(s => Math.min(s + 1, STEPS.length - 1))
   }
@@ -103,18 +109,49 @@ export function FormWizard({ isPro, plan }: Props) {
 
   function goTo(i: number) {
     if (i >= step) return // only allow going back
+    setShowErrors(false)
     setDir(-1)
     setStep(i)
   }
 
+  // Reset inline errors when the active step changes
+  useEffect(() => { setShowErrors(false) }, [step])
+
+  const getStepErrors = useCallback((): Record<string, string> => {
+    const errs: Record<string, string> = {}
+    switch (step) {
+      case 0:
+        if (values.name.trim().length < 2) errs.name = 'Enter a name with at least 2 characters'
+        break
+      case 3:
+        if (isPro) {
+          if (values.subdomain.length < 3) errs.subdomain = 'Subdomain must be at least 3 characters'
+          else if (!/^[a-z0-9-]+$/.test(values.subdomain)) errs.subdomain = 'Only lowercase letters, numbers, and hyphens'
+        }
+        break
+      case 4:
+        if (values.starts_at && values.ends_at && new Date(values.ends_at) <= new Date(values.starts_at))
+          errs.ends_at = 'Close date must be after the open date'
+        break
+      case 5:
+        if (values.name.trim().length < 2) errs.name = 'Form name must be at least 2 characters'
+        if (values.subdomain.length < 3) errs.subdomain = 'Subdomain must be at least 3 characters'
+        break
+    }
+    return errs
+  }, [step, values, isPro])
+
   function canProceed(): boolean {
     switch (step) {
-      case 0: return values.name.length >= 2
+      case 0: return values.name.trim().length >= 2
       case 1: return !!values.template
       case 2: return values.fields.length > 0
-      case 3: return true
-      case 4: return true
-      case 5: return values.name.length >= 2 && values.subdomain.length >= 3
+      case 3: return !isPro || (values.subdomain.length >= 3 && /^[a-z0-9-]+$/.test(values.subdomain))
+      case 4: {
+        if (values.starts_at && values.ends_at && new Date(values.ends_at) <= new Date(values.starts_at)) return false
+        return true
+      }
+      case 5: return values.name.trim().length >= 2 && values.subdomain.length >= 3
       default: return true
     }
   }
@@ -125,7 +162,9 @@ export function FormWizard({ isPro, plan }: Props) {
       case 0: return 'Enter a form name (at least 2 characters)'
       case 1: return 'Pick a design template'
       case 2: return 'Add at least one field'
-      case 5: return values.name.length < 2 ? 'Form name too short' : 'Subdomain must be at least 3 characters'
+      case 3: return isPro ? 'Fix the subdomain — see below' : null
+      case 4: return 'Close date must be after the open date'
+      case 5: return values.name.trim().length < 2 ? 'Form name too short' : 'Subdomain must be at least 3 characters'
       default: return null
     }
   }
@@ -261,11 +300,11 @@ export function FormWizard({ isPro, plan }: Props) {
             exit="exit"
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           >
-            {step === 0 && <StepType values={values} update={update} />}
+            {step === 0 && <StepType values={values} update={update} errors={showErrors ? getStepErrors() : {}} />}
             {step === 1 && <StepDesign values={values} update={update} isPro={isPro} />}
             {step === 2 && <StepFields values={values} update={update} isPro={isPro} />}
-            {step === 3 && <StepBranding values={values} update={update} isPro={isPro} />}
-            {step === 4 && <StepSettings values={values} update={update} isPro={isPro} />}
+            {step === 3 && <StepBranding values={values} update={update} isPro={isPro} errors={showErrors ? getStepErrors() : {}} />}
+            {step === 4 && <StepSettings values={values} update={update} isPro={isPro} errors={showErrors ? getStepErrors() : {}} />}
             {step === 5 && <StepReview values={values} isPro={isPro} />}
           </motion.div>
         </AnimatePresence>
@@ -287,7 +326,12 @@ export function FormWizard({ isPro, plan }: Props) {
             )}
             <Tooltip>
               <TooltipTrigger
-                render={<span className={!canProceed() ? 'cursor-not-allowed' : undefined} />}
+                render={
+                  <span
+                    className={!canProceed() ? 'cursor-not-allowed' : undefined}
+                    onClick={() => { if (!canProceed()) setShowErrors(true) }}
+                  />
+                }
               >
                 <Button
                   size="sm"

@@ -35,7 +35,7 @@ const PLAN_FEATURES = {
   Pro:      ['Unlimited forms', '10,000 entries per form', 'All 10 templates', 'Unlimited draws', 'No branding', 'Analytics + CSV export'],
   Business: ['Everything in Pro', 'Unlimited entries', '3 workspaces', 'Auto-draw scheduling', 'Webhooks', 'Audit logs'],
 }
-const PLAN_PRICES   = ['$0', '$9', '$29']
+const PLAN_PRICES   = ['$0', '$2.50', '$5']
 const PLAN_PERIODS  = ['/mo', '/mo', '/mo']
 const PLAN_HIGHLIGHT = [false, true, false]
 

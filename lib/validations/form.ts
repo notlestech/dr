@@ -14,7 +14,7 @@ export const fieldSchema = z.object({
 export const formWizardSchema = z.object({
   // Step 1 — template + basics
   template: z.enum(['clean', 'neon', 'gradient', 'party', 'luxury', 'brutal', 'glass', 'split', 'arcade', 'conversational', 'terminal', 'holographic']),
-  raffle_type: z.enum(['giveaway', 'earlyaccess', 'contest', 'internal', 'loyalty', 'tournament']),
+  raffle_type: z.enum(['giveaway', 'earlyaccess', 'contest', 'internal', 'loyalty', 'tournament', 'referral']),
   name: z.string().min(2, 'Name must be at least 2 characters').max(80),
   description: z.string().max(300).optional(),
   subdomain: z
@@ -39,7 +39,7 @@ export const formWizardSchema = z.object({
   show_entry_count: z.boolean(),
   winners_page: z.boolean(),
   require_confirmation: z.boolean(),
-  draw_theme: z.enum(['slot', 'wheel', 'cards', 'dice', 'burst', 'spotlight']).default('slot'),
+  draw_theme: z.enum(['slot', 'wheel', 'cards', 'dice', 'burst', 'spotlight', 'picker']).default('slot'),
 })
 
 export type FormWizardValues = z.infer<typeof formWizardSchema>
@@ -140,5 +140,16 @@ export const RAFFLE_TYPE_PRESETS = {
     accent_color: '#6366f1',
     template: 'arcade' as const,
     draw_theme: 'burst' as const,
+  },
+  referral: {
+    name: 'Referral Draw',
+    description: 'Share your referral link and get bonus entries — the more you share, the better your chances!',
+    fields: [
+      { id: 'email', type: 'email' as const, label: 'Email address', placeholder: 'you@example.com', required: true },
+      { id: 'name', type: 'text' as const, label: 'Full name', placeholder: 'Your name', required: true },
+    ],
+    accent_color: '#10b981',
+    template: 'gradient' as const,
+    draw_theme: 'picker' as const,
   },
 }

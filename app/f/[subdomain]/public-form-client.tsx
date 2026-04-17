@@ -4,8 +4,27 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import Script from 'next/script'
 import { createClient } from '@/lib/supabase/client'
 import { FormTemplateRenderer } from '@/components/form-templates'
-import { Lock, ExternalLink, CheckCircle2, X } from 'lucide-react'
+import { Lock, ExternalLink, CheckCircle2, X, Clock, Timer } from 'lucide-react'
 import type { PublicForm, FormField } from '@/types/app'
+
+function formatCountdown(ms: number): { d: number; h: number; m: number; s: number } {
+  const total = Math.max(0, ms)
+  return {
+    d: Math.floor(total / 86400000),
+    h: Math.floor((total % 86400000) / 3600000),
+    m: Math.floor((total % 3600000) / 60000),
+    s: Math.floor((total % 60000) / 1000),
+  }
+}
+
+function CountdownUnit({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <span className="text-3xl font-bold tabular-nums font-mono">{String(value).padStart(2, '0')}</span>
+      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
+    </div>
+  )
+}
 
 function normalizeUrl(url: string | null | undefined): string {
   if (!url) return '#'
@@ -32,6 +51,19 @@ export function PublicFormClient({ form, initialEntryCount, embedded }: Props) {
   const [isSuccess, setIsSuccess]       = useState(false)
   const [error, setError]               = useState<string | null>(null)
   const turnstileTokenRef               = useRef<string | null>(null)
+  const [now, setNow]                   = useState(() => new Date())
+
+  // Keep `now` in sync — only if scheduling is configured
+  useEffect(() => {
+    if (!form.starts_at && !form.ends_at) return
+    const id = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(id)
+  }, [form.starts_at, form.ends_at])
+
+  const startsAt = form.starts_at ? new Date(form.starts_at) : null
+  const endsAt   = form.ends_at   ? new Date(form.ends_at)   : null
+  const isNotOpenYet = startsAt && startsAt > now
+  const isScheduledClosed = endsAt && endsAt <= now
 
   // Follow-link gate
   const followLinks: FormField[] = form.fields.filter(f => f.type === 'follow_link')
@@ -111,6 +143,74 @@ export function PublicFormClient({ form, initialEntryCount, embedded }: Props) {
     }
   }, [form.subdomain, form.require_captcha])
 
+  // Form hasn't opened yet — show countdown
+  if (isNotOpenYet) {
+    const cd = formatCountdown(startsAt!.getTime() - now.getTime())
+    return (
+      <div
+        className="min-h-screen bg-background flex items-center justify-center p-6"
+        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+      >
+        <div className="text-center max-w-sm space-y-8">
+          {form.logo_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={form.logo_url} alt={form.name} className="h-10 object-contain mx-auto" />
+          )}
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight">{form.name}</h1>
+            {form.description && (
+              <p className="text-sm text-muted-foreground">{form.description}</p>
+            )}
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground font-medium uppercase tracking-wider">
+              <Clock className="size-3.5" />
+              Opening in
+            </div>
+            <div className="flex items-center justify-center gap-4">
+              {cd.d > 0 && <CountdownUnit value={cd.d} label="days" />}
+              <CountdownUnit value={cd.h} label="hours" />
+              <CountdownUnit value={cd.m} label="min" />
+              <CountdownUnit value={cd.s} label="sec" />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Opens on{' '}
+            {startsAt!.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // Form closed by schedule (ends_at passed) even if status is still 'active'
+  if (isScheduledClosed) {
+    return (
+      <div
+        className="min-h-screen bg-background flex items-center justify-center p-6"
+        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+      >
+        <div className="text-center max-w-sm">
+          <div className="size-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+            <Lock className="size-6 text-muted-foreground" />
+          </div>
+          <h1 className="text-xl font-semibold mb-2">{form.name}</h1>
+          <p className="text-muted-foreground text-sm">
+            Entries for this raffle are no longer being accepted.
+          </p>
+          {form.winners_page && (
+            <a
+              href={`/winners/${form.subdomain}`}
+              className="mt-4 inline-block text-sm font-medium underline underline-offset-4 hover:no-underline"
+            >
+              View draw results
+            </a>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   if (form.status === 'closed') {
     return (
       <div
@@ -186,8 +286,30 @@ export function PublicFormClient({ form, initialEntryCount, embedded }: Props) {
     )
   }
 
+  // Closing countdown (shown as a banner when ends_at is set and form is still open)
+  const closingBanner = endsAt && !isScheduledClosed ? (() => {
+    const cd = formatCountdown(endsAt.getTime() - now.getTime())
+    const parts: string[] = []
+    if (cd.d > 0) parts.push(`${cd.d}d`)
+    if (cd.h > 0 || cd.d > 0) parts.push(`${cd.h}h`)
+    parts.push(`${cd.m}m`)
+    parts.push(`${cd.s}s`)
+    return parts.join(' ')
+  })() : null
+
   return (
     <div style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      {/* Closing countdown banner */}
+      {closingBanner && (
+        <div
+          className="sticky top-0 z-50 flex items-center justify-center gap-2 py-2 text-xs font-semibold text-white"
+          style={{ backgroundColor: form.accent_color }}
+        >
+          <Timer className="size-3.5" />
+          Closes in {closingBanner}
+        </div>
+      )}
+
       {/* Cloudflare Turnstile — compact widget anchored above safe area */}
       {form.require_captcha && (
         <>

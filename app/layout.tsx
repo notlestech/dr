@@ -15,12 +15,34 @@ const instrumentSerif = Instrument_Serif({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://drawvault.site'),
   title: {
     default: 'DrawVault — Live Raffle & Giveaway Tool',
     template: '%s | DrawVault',
   },
-  description: 'Create branded entry forms and run live draws for streamers and companies.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://drawvault.site'),
+  description: 'Create branded entry forms and run live draws for streamers and companies. Free giveaway tool with slot-machine draw animation, real-time entries, and custom subdomains.',
+  keywords: [
+    'giveaway tool', 'raffle tool', 'live draw', 'slot machine giveaway',
+    'twitch giveaway', 'youtube giveaway', 'entry form builder',
+    'contest software', 'prize draw', 'drawvault',
+  ],
+  authors: [{ name: 'DrawVault', url: 'https://drawvault.site' }],
+  creator: 'DrawVault',
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
+  openGraph: {
+    type: 'website',
+    siteName: 'DrawVault',
+    title: 'DrawVault — Live Raffle & Giveaway Tool',
+    description: 'Create branded entry forms and run live draws for streamers and companies. Free plan available, no credit card required.',
+    url: 'https://drawvault.site',
+    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'DrawVault' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'DrawVault — Live Raffle & Giveaway Tool',
+    description: 'Create branded entry forms and run live draws for streamers and companies.',
+    images: ['/og-default.png'],
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

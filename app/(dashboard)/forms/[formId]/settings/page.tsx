@@ -22,6 +22,7 @@ import {
 import { toast } from 'sonner'
 import { Trash2 } from 'lucide-react'
 import type { Form } from '@/types/app'
+import { deleteForm as deleteFormAction } from '@/actions/forms'
 import { use } from 'react'
 
 interface Props { params: Promise<{ formId: string }> }
@@ -93,9 +94,16 @@ export default function FormSettingsPage({ params }: Props) {
 
   async function deleteForm() {
     setDeleting(true)
-    await supabase.from('forms').delete().eq('id', formId)
-    toast.success('Form deleted')
-    router.push('/forms')
+    try {
+      const result = await deleteFormAction(formId)
+      if (result?.error) {
+        toast.error(result.error)
+        setDeleting(false)
+      }
+      // On success, deleteFormAction redirects server-side — no client navigation needed
+    } catch {
+      // redirect() throws in Next.js server actions — this is expected on success
+    }
   }
 
   if (loading) {
@@ -207,7 +215,11 @@ export default function FormSettingsPage({ params }: Props) {
       {/* Danger zone */}
       <div className="border border-red-500/20 rounded-xl p-4 space-y-3">
         <h2 className="text-sm font-medium text-red-400">Danger Zone</h2>
-        <p className="text-xs text-muted-foreground">Deleting a form permanently removes all entries, draws, and analytics. This cannot be undone.</p>
+        <p className="text-xs text-muted-foreground">
+          Deleting a form permanently removes all entries, draws, and analytics. The subdomain{' '}
+          <span className="font-mono text-foreground">{form.subdomain}</span> will be released and
+          can be claimed by anyone. This cannot be undone.
+        </p>
         <AlertDialog>
           <AlertDialogTrigger
             render={<Button variant="outline" disabled={deleting} className="border-red-500/30 text-red-400 hover:bg-red-500/10 gap-2" />}
@@ -218,8 +230,15 @@ export default function FormSettingsPage({ params }: Props) {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete &ldquo;{form.name}&rdquo;?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This permanently deletes the form and all its entries, draws, and analytics. There is no way to recover this data.
+              <AlertDialogDescription asChild>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p>This permanently deletes the form and all its entries, draws, and analytics. There is no way to recover this data.</p>
+                  <p>
+                    The subdomain{' '}
+                    <span className="font-mono text-foreground font-medium">{form.subdomain}.drawvault.site</span>{' '}
+                    will be released and can be claimed by anyone.
+                  </p>
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

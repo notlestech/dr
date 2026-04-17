@@ -13,6 +13,7 @@ interface Props {
   values: FormWizardValues
   update: (payload: Partial<FormWizardValues>) => void
   isPro: boolean
+  errors?: Record<string, string>
 }
 
 function SettingRow({
@@ -44,7 +45,7 @@ function SettingRow({
   )
 }
 
-export function StepSettings({ values, update, isPro }: Props) {
+export function StepSettings({ values, update, isPro, errors }: Props) {
   const followLinks = values.fields.filter(f => f.type === 'follow_link')
 
   function addFollowLink() {
@@ -84,12 +85,17 @@ export function StepSettings({ values, update, isPro }: Props) {
             />
           </SettingRow>
           <SettingRow label="Close date" description="Form closes automatically at this time">
-            <Input
-              type="datetime-local"
-              value={values.ends_at ?? ''}
-              onChange={e => update({ ends_at: e.target.value })}
-              className="text-xs h-8 w-44"
-            />
+            <div className="flex flex-col items-end gap-1">
+              <Input
+                type="datetime-local"
+                value={values.ends_at ?? ''}
+                onChange={e => update({ ends_at: e.target.value })}
+                className={cn('text-xs h-8 w-44', errors?.ends_at && 'border-destructive focus-visible:ring-destructive')}
+              />
+              {errors?.ends_at && (
+                <p className="text-xs text-destructive text-right">{errors.ends_at}</p>
+              )}
+            </div>
           </SettingRow>
           <SettingRow label="Max entries" description="Leave blank for unlimited">
             <Input

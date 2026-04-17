@@ -7,16 +7,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
-import { Gift, Rocket, Award, Building2, Star, Swords } from 'lucide-react'
+import { Gift, Rocket, Award, Building2, Star, Swords, Share2 } from 'lucide-react'
 import type { FormWizardValues } from '@/lib/validations/form'
 
 interface Props {
   values: FormWizardValues
   update: (payload: Partial<FormWizardValues>) => void
+  errors?: Record<string, string>
 }
 
 interface RaffleTypeInfo {
-  id: 'giveaway' | 'earlyaccess' | 'contest' | 'internal' | 'loyalty' | 'tournament'
+  id: 'giveaway' | 'earlyaccess' | 'contest' | 'internal' | 'loyalty' | 'tournament' | 'referral'
   label: string
   desc: string
   badge: string
@@ -108,9 +109,22 @@ const RAFFLE_TYPES: RaffleTypeInfo[] = [
       bestFor: 'Esports tournaments, local competitions, bracket draws',
     },
   },
+  {
+    id: 'referral',
+    label: 'Referral Draw',
+    desc: 'More shares = more entries',
+    badge: 'Viral',
+    icon: Share2,
+    color: '#10b981',
+    tooltip: {
+      summary: 'Participants enter and can earn bonus entries by referring friends — great for viral growth.',
+      fields: ['Email address', 'Full name'],
+      bestFor: 'Product launches, community growth, social virality campaigns',
+    },
+  },
 ]
 
-export function StepType({ values, update }: Props) {
+export function StepType({ values, update, errors }: Props) {
   function selectType(type: FormWizardValues['raffle_type']) {
     const preset = RAFFLE_TYPE_PRESETS[type]
     const newName = values.name || preset.name
@@ -234,9 +248,12 @@ export function StepType({ values, update }: Props) {
             value={values.name}
             onChange={e => handleNameChange(e.target.value)}
             placeholder="Summer Giveaway"
-            className="text-base h-11"
+            className={cn('text-base h-11', errors?.name && 'border-destructive focus-visible:ring-destructive')}
             autoFocus
           />
+          {errors?.name && (
+            <p className="text-xs text-destructive mt-1">{errors.name}</p>
+          )}
         </div>
 
         <div className="space-y-1.5">

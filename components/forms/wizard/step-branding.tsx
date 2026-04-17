@@ -8,15 +8,17 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Upload, X, Lock, ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
 import type { FormWizardValues } from '@/lib/validations/form'
 
 interface Props {
   values: FormWizardValues
   update: (payload: Partial<FormWizardValues>) => void
   isPro: boolean
+  errors?: Record<string, string>
 }
 
-export function StepBranding({ values, update, isPro }: Props) {
+export function StepBranding({ values, update, isPro, errors }: Props) {
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -164,13 +166,16 @@ export function StepBranding({ values, update, isPro }: Props) {
                 value={values.subdomain}
                 onChange={e => update({ subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
                 placeholder="my-giveaway"
-                className="rounded-r-none border-r-0 font-mono"
+                className={cn('rounded-r-none border-r-0 font-mono', errors?.subdomain && 'border-destructive focus-visible:ring-destructive')}
               />
               <span className="h-10 px-3 flex items-center bg-muted border border-input text-muted-foreground text-sm rounded-r-xl whitespace-nowrap">
                 .drawvault.site
               </span>
             </div>
-            {values.subdomain && (
+            {errors?.subdomain && (
+              <p className="text-xs text-destructive">{errors.subdomain}</p>
+            )}
+            {!errors?.subdomain && values.subdomain && (
               <p className="text-xs text-muted-foreground">
                 Public link:{' '}
                 <span className="font-mono text-foreground">{values.subdomain}.drawvault.site</span>

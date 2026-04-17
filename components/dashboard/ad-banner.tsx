@@ -68,15 +68,23 @@ export function AdBanner({ plan, slot = '8572604713' }: Props) {
   return (
     <>
       {/* Ad slot */}
-      <div ref={containerRef} className="w-full overflow-hidden">
-        <ins
-          className="adsbygoogle"
-          style={{ display: 'block', width: '100%' }}
-          data-ad-client="ca-pub-7840488343669346"
-          data-ad-slot={slot}
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-        />
+      <div
+        ref={containerRef}
+        className="relative flex min-h-[100px] w-full items-center justify-center overflow-hidden rounded-xl border border-dashed border-border bg-muted/10 p-2"
+      >
+        <span className="absolute z-0 select-none text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/40 pointer-events-none">
+          Advertisement
+        </span>
+        <div className="relative z-10 w-full">
+          <ins
+            className="adsbygoogle mix-blend-multiply dark:mix-blend-normal"
+            style={{ display: 'block', width: '100%' }}
+            data-ad-client="ca-pub-7840488343669346"
+            data-ad-slot={slot}
+            data-ad-format="auto"
+            data-full-width-responsive="true"
+          />
+        </div>
       </div>
 
       {/* Ad blocker nudge — shown once, dismissible */}
