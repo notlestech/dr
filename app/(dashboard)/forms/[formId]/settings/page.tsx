@@ -230,15 +230,11 @@ export default function FormSettingsPage({ params }: Props) {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete &ldquo;{form.name}&rdquo;?</AlertDialogTitle>
-              <AlertDialogDescription asChild>
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <p>This permanently deletes the form and all its entries, draws, and analytics. There is no way to recover this data.</p>
-                  <p>
-                    The subdomain{' '}
-                    <span className="font-mono text-foreground font-medium">{form.subdomain}.drawvault.site</span>{' '}
-                    will be released and can be claimed by anyone.
-                  </p>
-                </div>
+              <AlertDialogDescription className="space-y-2">
+                This permanently deletes the form and all its entries, draws, and analytics. There is no way to recover this data.{' '}
+                The subdomain{' '}
+                <span className="font-mono text-foreground font-medium">{form.subdomain}.drawvault.site</span>{' '}
+                will be released and can be claimed by anyone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
