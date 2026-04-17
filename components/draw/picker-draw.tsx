@@ -84,7 +84,7 @@ export function PickerDraw({ entries, accent, winner, isSpinning, onComplete }: 
   const isTyping = phase === 'typing'
   const displayName = isTyping || isDone
     ? typed
-    : (currentName || entries[0]?.displayName ?? '')
+    : (currentName || (entries[0]?.displayName ?? ''))
 
   return (
     <div
