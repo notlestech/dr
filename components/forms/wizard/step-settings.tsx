@@ -45,6 +45,15 @@ function SettingRow({
   )
 }
 
+function FreePlanLocked({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted px-3 py-1.5 rounded-lg border">
+      <Lock className="size-3 shrink-0" />
+      {label}
+    </div>
+  )
+}
+
 export function StepSettings({ values, update, isPro, errors }: Props) {
   const followLinks = values.fields.filter(f => f.type === 'follow_link')
 
@@ -84,29 +93,71 @@ export function StepSettings({ values, update, isPro, errors }: Props) {
               className="text-xs h-8 w-44"
             />
           </SettingRow>
-          <SettingRow label="Close date" description="Form closes automatically at this time">
-            <div className="flex flex-col items-end gap-1">
-              <Input
-                type="datetime-local"
-                value={values.ends_at ?? ''}
-                onChange={e => update({ ends_at: e.target.value })}
-                className={cn('text-xs h-8 w-44', errors?.ends_at && 'border-destructive focus-visible:ring-destructive')}
-              />
-              {errors?.ends_at && (
-                <p className="text-xs text-destructive text-right">{errors.ends_at}</p>
+
+          {/* Close date — locked on free plan */}
+          <div className="flex items-start justify-between gap-4 py-4 border-b last:border-0">
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Close date</span>
+                {!isPro && (
+                  <span className="flex items-center gap-0.5 text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full border font-medium leading-none">
+                    <Lock className="size-2.5" /> Free
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {isPro ? 'Form closes automatically at this time' : 'Free plan: expires 30 days after creation'}
+              </p>
+            </div>
+            <div className="shrink-0">
+              {isPro ? (
+                <div className="flex flex-col items-end gap-1">
+                  <Input
+                    type="datetime-local"
+                    value={values.ends_at ?? ''}
+                    onChange={e => update({ ends_at: e.target.value })}
+                    className={cn('text-xs h-8 w-44', errors?.ends_at && 'border-destructive focus-visible:ring-destructive')}
+                  />
+                  {errors?.ends_at && (
+                    <p className="text-xs text-destructive text-right">{errors.ends_at}</p>
+                  )}
+                </div>
+              ) : (
+                <FreePlanLocked label="30 days from creation" />
               )}
             </div>
-          </SettingRow>
-          <SettingRow label="Max entries" description="Leave blank for unlimited">
-            <Input
-              type="number"
-              value={values.max_entries ?? ''}
-              onChange={e => update({ max_entries: e.target.value ? Number(e.target.value) : undefined })}
-              placeholder="Unlimited"
-              min={1}
-              className="w-28 text-xs h-8"
-            />
-          </SettingRow>
+          </div>
+
+          {/* Max entries — locked at 500 on free plan */}
+          <div className="flex items-start justify-between gap-4 py-4 border-b last:border-0">
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Max entries</span>
+                {!isPro && (
+                  <span className="flex items-center gap-0.5 text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full border font-medium leading-none">
+                    <Lock className="size-2.5" /> Free
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {isPro ? 'Leave blank for unlimited' : 'Free plan is capped at 500 entries per form'}
+              </p>
+            </div>
+            <div className="shrink-0">
+              {isPro ? (
+                <Input
+                  type="number"
+                  value={values.max_entries ?? ''}
+                  onChange={e => update({ max_entries: e.target.value ? Number(e.target.value) : undefined })}
+                  placeholder="Unlimited"
+                  min={1}
+                  className="w-28 text-xs h-8"
+                />
+              ) : (
+                <FreePlanLocked label="500 entries" />
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -186,7 +237,6 @@ export function StepSettings({ values, update, isPro, errors }: Props) {
                 value={link.placeholder ?? ''}
                 onChange={e => {
                   let val = e.target.value
-                  // Auto-prepend https:// when user pastes/types a URL without it
                   if (val && !val.startsWith('http') && val.includes('.')) {
                     val = 'https://' + val
                   }

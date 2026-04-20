@@ -17,31 +17,39 @@ const instrumentSerif = Instrument_Serif({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://drawvault.site'),
   title: {
-    default: 'DrawVault — Live Raffle & Giveaway Tool',
+    default: 'DrawVault — Free Raffle & Giveaway Tool for Streamers',
     template: '%s | DrawVault',
   },
-  description: 'Create branded entry forms and run live draws for streamers and companies. Free giveaway tool with slot-machine draw animation, real-time entries, and custom subdomains.',
+  description: 'Create branded entry forms and run live draws for streamers and companies. Free giveaway tool with slot-machine draw animation, real-time entries, and custom links.',
   keywords: [
     'giveaway tool', 'raffle tool', 'live draw', 'slot machine giveaway',
     'twitch giveaway', 'youtube giveaway', 'entry form builder',
-    'contest software', 'prize draw', 'drawvault',
+    'contest software', 'prize draw', 'online raffle', 'free giveaway maker',
+    'streamer giveaway', 'community giveaway', 'drawvault',
   ],
   authors: [{ name: 'DrawVault', url: 'https://drawvault.site' }],
   creator: 'DrawVault',
-  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
+  publisher: 'DrawVault',
+  category: 'technology',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
+  },
   openGraph: {
     type: 'website',
     siteName: 'DrawVault',
-    title: 'DrawVault — Live Raffle & Giveaway Tool',
+    title: 'DrawVault — Free Raffle & Giveaway Tool for Streamers',
     description: 'Create branded entry forms and run live draws for streamers and companies. Free plan available, no credit card required.',
     url: 'https://drawvault.site',
-    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'DrawVault' }],
+    locale: 'en_US',
+    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'DrawVault — Free Raffle & Giveaway Tool' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'DrawVault — Live Raffle & Giveaway Tool',
+    title: 'DrawVault — Free Raffle & Giveaway Tool for Streamers',
     description: 'Create branded entry forms and run live draws for streamers and companies.',
-    images: ['/og-default.png'],
+    images: ['/api/og'],
   },
 }
 
@@ -59,6 +67,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7840488343669346"
           crossOrigin="anonymous"
+        />
+        {/* JSON-LD structured data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebApplication',
+            name: 'DrawVault',
+            url: 'https://drawvault.site',
+            description: 'Create branded entry forms and run live draws for streamers and companies.',
+            applicationCategory: 'UtilitiesApplication',
+            operatingSystem: 'Web',
+            offers: {
+              '@type': 'Offer',
+              price: '0',
+              priceCurrency: 'USD',
+              description: 'Free plan — 3 forms, 500 entries each, no credit card required.',
+            },
+          }) }}
         />
       </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>

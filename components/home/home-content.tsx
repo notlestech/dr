@@ -409,11 +409,13 @@ export function HomeContent({ isLoggedIn = false }: Props) {
             </div>
             DrawVault
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 flex-wrap">
             <Link href="#how-it-works" className="hover:text-foreground transition-colors cursor-pointer">{t.footer.howItWorks}</Link>
             <Link href="#features"     className="hover:text-foreground transition-colors cursor-pointer">{t.footer.features}</Link>
             <Link href="#pricing"      className="hover:text-foreground transition-colors cursor-pointer">{t.footer.pricing}</Link>
             <Link href="/login"        className="hover:text-foreground transition-colors cursor-pointer">{t.footer.signIn}</Link>
+            <Link href="/privacy"      className="hover:text-foreground transition-colors cursor-pointer">Privacy</Link>
+            <Link href="/terms"        className="hover:text-foreground transition-colors cursor-pointer">Terms</Link>
           </div>
           <p>© {new Date().getFullYear()} DrawVault. {t.footer.rights}</p>
         </div>

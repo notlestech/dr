@@ -75,7 +75,8 @@ export function AdBanner({ plan, slot = '8572604713' }: Props) {
         <span className="absolute z-0 select-none text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/40 pointer-events-none">
           Advertisement
         </span>
-        <div className="relative z-10 w-full">
+        {/* In dark mode the ad iframe has a white background — wrap it so it looks intentional */}
+        <div className="relative z-10 w-full dark:bg-white dark:rounded-lg dark:overflow-hidden dark:shadow-sm">
           <ins
             className="adsbygoogle mix-blend-multiply dark:mix-blend-normal"
             style={{ display: 'block', width: '100%' }}

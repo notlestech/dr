@@ -13,8 +13,12 @@ import type { FormWizardValues } from '@/lib/validations/form'
 interface Props {
   values: FormWizardValues
   update: (payload: Partial<FormWizardValues>) => void
+  isPro: boolean
   errors?: Record<string, string>
 }
+
+// Only giveaway is available on the free plan
+const FREE_RAFFLE_TYPES = new Set(['giveaway'])
 
 interface RaffleTypeInfo {
   id: 'giveaway' | 'earlyaccess' | 'contest' | 'internal' | 'loyalty' | 'tournament' | 'referral'
@@ -124,8 +128,9 @@ const RAFFLE_TYPES: RaffleTypeInfo[] = [
   },
 ]
 
-export function StepType({ values, update, errors }: Props) {
-  function selectType(type: FormWizardValues['raffle_type']) {
+export function StepType({ values, update, isPro, errors }: Props) {
+  function selectType(type: FormWizardValues['raffle_type'], locked: boolean) {
+    if (locked) return
     const preset = RAFFLE_TYPE_PRESETS[type]
     const newName = values.name || preset.name
     update({
@@ -156,17 +161,20 @@ export function StepType({ values, update, errors }: Props) {
             {RAFFLE_TYPES.map(t => {
               const Icon = t.icon
               const selected = values.raffle_type === t.id
+              const locked = !isPro && !FREE_RAFFLE_TYPES.has(t.id)
               return (
                 <Tooltip key={t.id}>
                   <TooltipTrigger
                     render={
                       <button
-                        onClick={() => selectType(t.id)}
+                        onClick={() => selectType(t.id, locked)}
                         className={cn(
-                          'flex items-start gap-3 p-4 rounded-xl border text-left transition-all duration-200',
-                          selected ? 'border-2' : 'border hover:border-foreground/20 hover:bg-muted/20'
+                          'flex items-start gap-3 p-4 rounded-xl border text-left transition-all duration-200 relative',
+                          locked
+                            ? 'opacity-50 cursor-not-allowed'
+                            : selected ? 'border-2' : 'border hover:border-foreground/20 hover:bg-muted/20'
                         )}
-                        style={selected ? {
+                        style={selected && !locked ? {
                           borderColor: t.color,
                           backgroundColor: t.color + '0d',
                         } : undefined}
@@ -175,20 +183,32 @@ export function StepType({ values, update, errors }: Props) {
                   >
                     {/* Icon */}
                     <div
-                      className="size-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-all"
+                      className="size-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-all relative"
                       style={{
-                        backgroundColor: selected ? t.color + '25' : t.color + '15',
+                        backgroundColor: selected && !locked ? t.color + '25' : t.color + '15',
                         color: t.color,
                       }}
                     >
                       <Icon className="size-4" />
+                      {locked && (
+                        <span className="absolute -top-1.5 -right-1.5 size-4 rounded-full bg-background border flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="size-2.5 text-muted-foreground">
+                            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                          </svg>
+                        </span>
+                      )}
                     </div>
 
                     {/* Text */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-semibold">{t.label}</p>
-                        {selected && (
+                        {locked && (
+                          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full leading-none bg-muted text-muted-foreground border">
+                            Pro
+                          </span>
+                        )}
+                        {selected && !locked && (
                           <span
                             className="text-[10px] font-medium px-1.5 py-0.5 rounded-full leading-none"
                             style={{ backgroundColor: t.color + '20', color: t.color }}
@@ -201,7 +221,7 @@ export function StepType({ values, update, errors }: Props) {
                     </div>
 
                     {/* Selection dot */}
-                    {selected && (
+                    {selected && !locked && (
                       <div
                         className="size-2 rounded-full shrink-0 mt-1.5"
                         style={{ backgroundColor: t.color }}

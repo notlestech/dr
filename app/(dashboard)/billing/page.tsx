@@ -65,9 +65,10 @@ export default async function BillingPage() {
 
   const wid = membership.workspace_id
 
-  const [{ data: sub }, { data: forms }] = await Promise.all([
+  const [{ data: sub }, { data: forms }, { data: workspace }] = await Promise.all([
     supabase.from('subscriptions').select('*').eq('workspace_id', wid).maybeSingle(),
     supabase.from('forms').select('*, entries(count)').eq('workspace_id', wid).order('created_at', { ascending: false }),
+    supabase.from('workspaces').select('forms_created_total').eq('id', wid).single(),
   ])
 
   // Fetch entry count separately so we can use the resolved form IDs
@@ -83,7 +84,8 @@ export default async function BillingPage() {
   const Icon   = style.icon
 
   const formList = (forms ?? []) as (Form & { entries: { count: number }[] })[]
-  const formCount = formList.length
+  // Use lifetime counter so deleted forms still consume quota
+  const formCount = workspace?.forms_created_total ?? formList.length
 
   const renewalDate = sub?.current_period_end
     ? new Date(sub.current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -140,7 +142,7 @@ export default async function BillingPage() {
         </CardHeader>
         <CardContent className="space-y-5">
           <UsageBar used={formCount}           limit={limits.forms}   label="Forms" />
-          <UsageBar used={totalEntries ?? 0}   limit={null}           label="Total entries (all forms)" />
+          <UsageBar used={totalEntries ?? 0}   limit={limits.entries} label="Total entries (all forms)" />
 
           {/* Warn if near form limit */}
           {limits.forms && formCount >= limits.forms && (

@@ -300,7 +300,7 @@ export function FormWizard({ isPro, plan }: Props) {
             exit="exit"
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           >
-            {step === 0 && <StepType values={values} update={update} errors={showErrors ? getStepErrors() : {}} />}
+            {step === 0 && <StepType values={values} update={update} isPro={isPro} errors={showErrors ? getStepErrors() : {}} />}
             {step === 1 && <StepDesign values={values} update={update} isPro={isPro} />}
             {step === 2 && <StepFields values={values} update={update} isPro={isPro} />}
             {step === 3 && <StepBranding values={values} update={update} isPro={isPro} errors={showErrors ? getStepErrors() : {}} />}
