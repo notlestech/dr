@@ -93,7 +93,7 @@ export async function verifyOtpAndCreateAccount(
 
   const { data: workspace, error: wsError } = await supabase
     .from('workspaces')
-    .insert({ name: workspaceName, slug: workspaceSlug })
+    .insert({ name: workspaceName, slug: workspaceSlug, owner_id: userId })
     .select('id')
     .single()
 
@@ -103,24 +103,31 @@ export async function verifyOtpAndCreateAccount(
     return { error: 'Failed to create workspace. Please try again.' }
   }
 
-  // Create workspace member, profile, and free subscription in parallel
-  const [memberRes, profileRes, subRes] = await Promise.all([
+  // Profile must exist before workspace_members and subscriptions (FK deps)
+  const { error: profileError } = await supabase.from('profiles').upsert({
+    id: userId,
+    full_name: fullName,
+  })
+
+  if (profileError) {
+    await supabase.auth.admin.deleteUser(userId)
+    return { error: 'Failed to set up account. Please try again.' }
+  }
+
+  // Create workspace member and free subscription in parallel
+  const [memberRes, subRes] = await Promise.all([
     supabase.from('workspace_members').upsert({
       workspace_id: workspace.id,
       user_id: userId,
       role: 'owner',
     }, { onConflict: 'workspace_id,user_id' }),
-    supabase.from('profiles').upsert({
-      id: userId,
-      full_name: fullName,
-    }),
     supabase.from('subscriptions').upsert({
       workspace_id: workspace.id,
       plan: 'free',
     }, { onConflict: 'workspace_id' }),
   ])
 
-  if (memberRes.error || profileRes.error || subRes.error) {
+  if (memberRes.error || subRes.error) {
     await supabase.auth.admin.deleteUser(userId)
     return { error: 'Failed to set up account. Please try again.' }
   }
