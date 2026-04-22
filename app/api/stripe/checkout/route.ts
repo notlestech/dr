@@ -33,18 +33,23 @@ export async function POST(req: NextRequest) {
     .eq('workspace_id', membership.workspace_id)
     .maybeSingle()
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'subscription',
-    customer: sub?.stripe_customer_id || undefined,
-    customer_email: sub?.stripe_customer_id ? undefined : user.email,
-    line_items: [{ price: priceId, quantity: 1 }],
-    success_url: successUrl,
-    cancel_url: cancelUrl,
-    subscription_data: {
-      metadata: { workspace_id: membership.workspace_id },
-    },
-    allow_promotion_codes: true,
-  })
+  let session
+  try {
+    session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      customer: sub?.stripe_customer_id || undefined,
+      customer_email: sub?.stripe_customer_id ? undefined : user.email,
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      subscription_data: {
+        metadata: { workspace_id: membership.workspace_id },
+      },
+      allow_promotion_codes: true,
+    })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message ?? 'Failed to create checkout session' }, { status: 500 })
+  }
 
   return NextResponse.json({ url: session.url })
 }

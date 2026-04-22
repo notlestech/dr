@@ -53,7 +53,7 @@ export async function createForm(values: FormWizardValues) {
     .from('forms')
     .select('id')
     .eq('subdomain', parsed.data.subdomain)
-    .single()
+    .maybeSingle()
 
   if (existing) return { error: 'This subdomain is already taken' }
 

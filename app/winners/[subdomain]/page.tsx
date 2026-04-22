@@ -86,7 +86,8 @@ export default async function WinnersPage({ params }: Props) {
           <div className="space-y-3">
             <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Draw History</h2>
             {(winners ?? []).map((entry: Entry, i: number) => {
-              const displayName = Object.values(entry.data)[0] ?? 'Winner'
+              const d = entry.data as Record<string, string>
+              const displayName = d.name || d.full_name || d.email || Object.values(d)[0] || 'Winner'
               return (
                 <div
                   key={entry.id}

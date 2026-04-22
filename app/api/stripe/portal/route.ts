@@ -27,10 +27,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No billing account' }, { status: 400 })
   }
 
-  const session = await stripe.billingPortal.sessions.create({
-    customer: sub.stripe_customer_id,
-    return_url: returnUrl,
-  })
+  let session
+  try {
+    session = await stripe.billingPortal.sessions.create({
+      customer: sub.stripe_customer_id,
+      return_url: returnUrl,
+    })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message ?? 'Failed to create portal session' }, { status: 500 })
+  }
 
   return NextResponse.json({ url: session.url })
 }

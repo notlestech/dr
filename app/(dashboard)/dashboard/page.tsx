@@ -56,15 +56,15 @@ async function getData(userId: string) {
   let totalWinners = 0
   let totalForms = 0
 
-  const { count: fc } = await supabase
-    .from('forms').select('*', { count: 'exact', head: true }).eq('workspace_id', wid)
+  const { count: fc, data: allForms } = await supabase
+    .from('forms').select('id', { count: 'exact' }).eq('workspace_id', wid)
   totalForms = fc ?? 0
 
-  if (formList.length > 0) {
-    const ids = formList.map(f => f.id)
+  const allFormIds = (allForms ?? []).map(f => f.id)
+  if (allFormIds.length > 0) {
     const [{ count: ec }, { count: wc }] = await Promise.all([
-      supabase.from('entries').select('*', { count: 'exact', head: true }).in('form_id', ids),
-      supabase.from('entries').select('*', { count: 'exact', head: true }).in('form_id', ids).eq('is_winner', true),
+      supabase.from('entries').select('*', { count: 'exact', head: true }).in('form_id', allFormIds),
+      supabase.from('entries').select('*', { count: 'exact', head: true }).in('form_id', allFormIds).eq('is_winner', true),
     ])
     totalEntries = ec ?? 0
     totalWinners = wc ?? 0

@@ -124,6 +124,7 @@ export async function verifyOtpAndCreateAccount(
     supabase.from('subscriptions').upsert({
       workspace_id: workspace.id,
       plan: 'free',
+      status: 'active',
     }, { onConflict: 'workspace_id' }),
   ])
 

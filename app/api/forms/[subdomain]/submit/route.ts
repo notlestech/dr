@@ -74,7 +74,8 @@ export async function POST(
   }
 
   // Verify Turnstile
-  if (form.require_captcha && body.turnstileToken) {
+  if (form.require_captcha) {
+    if (!body.turnstileToken) return NextResponse.json({ error: 'CAPTCHA required' }, { status: 403 })
     const valid = await verifyTurnstile(body.turnstileToken, ip)
     if (!valid) return NextResponse.json({ error: 'CAPTCHA verification failed' }, { status: 403 })
   }

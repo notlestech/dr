@@ -68,10 +68,12 @@ export async function POST(request: NextRequest) {
   if (drawError) return NextResponse.json({ error: 'Failed to save draw' }, { status: 500 })
 
   // Mark entry as winner
-  await service
+  const { error: winnerError } = await service
     .from('entries')
     .update({ is_winner: true, draw_id: draw.id })
     .eq('id', body.entryId)
+
+  if (winnerError) console.error('[draws/save] failed to mark winner:', winnerError.message)
 
   // --- Winner email notification ---
   try {

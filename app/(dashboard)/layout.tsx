@@ -64,7 +64,7 @@ async function provisionWorkspace(userId: string, email: string): Promise<string
   const [memberRes, profileRes, subRes] = await Promise.all([
     admin.from('workspace_members').upsert({ workspace_id: workspace.id, user_id: userId, role: 'owner' }, { onConflict: 'workspace_id,user_id' }),
     admin.from('profiles').upsert({ id: userId, full_name: null }),
-    admin.from('subscriptions').upsert({ workspace_id: workspace.id, plan: 'free' }, { onConflict: 'workspace_id' }),
+    admin.from('subscriptions').upsert({ workspace_id: workspace.id, plan: 'free', status: 'active' }, { onConflict: 'workspace_id' }),
   ])
 
   const secondaryErr = memberRes.error ?? profileRes.error ?? subRes.error
@@ -85,13 +85,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/login')
   }
 
-  console.log('[dashboard/layout] user found:', user.email)
   let data = await getLayoutData(user.id)
 
   // Workspace missing — provision one on-demand (accounts created before the
   // signup fix, or where the signup workspace creation failed)
   if (!data) {
-    console.log('[dashboard/layout] no workspace found — provisioning for:', user.email)
     const provisionErr = await provisionWorkspace(user.id, user.email ?? '')
     if (provisionErr) {
       console.error('[dashboard/layout] provisionWorkspace failed for:', user.email, provisionErr)
