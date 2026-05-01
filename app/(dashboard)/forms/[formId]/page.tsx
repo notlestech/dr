@@ -10,7 +10,6 @@ import { Users, Trophy, BarChart2, Settings, Dice5, ExternalLink, Clock, History
 import { formatNumber, timeAgo } from '@/lib/utils'
 import type { Form } from '@/types/app'
 
-
 interface Props { params: Promise<{ formId: string }> }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -117,8 +116,6 @@ export default async function FormOverviewPage({ params }: Props) {
           </div>
         ))}
       </div>
-
-
 
       {/* Quick nav */}
       <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">

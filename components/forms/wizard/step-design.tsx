@@ -2,12 +2,24 @@
 
 import { cn } from '@/lib/utils'
 import { FORM_TEMPLATES } from '@/types/app'
-import { Lock, Check } from 'lucide-react'
+import { Lock, Check, Shuffle, RotateCw, CreditCard, Dice5, Zap, Sparkles, MousePointerClick, Code2, KeyRound } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { FormTemplateRenderer } from '@/components/form-templates'
 import type { FormWizardValues } from '@/lib/validations/form'
 import type { PublicForm } from '@/types/app'
+
+const DRAW_THEME_OPTIONS = [
+  { id: 'slot',      label: 'Slot',      icon: Shuffle,          free: true,  description: 'Classic slot machine reel — dramatic deceleration to a stop.' },
+  { id: 'picker',   label: 'Picker',    icon: MousePointerClick, free: true,  description: 'Simple animated name highlight. Great for small pools.' },
+  { id: 'wheel',    label: 'Wheel',     icon: RotateCw,          free: false, description: 'Spinning prize wheel with segments per entry.' },
+  { id: 'cards',    label: 'Cards',     icon: CreditCard,        free: false, description: 'Playing card fan that shuffles and flips to reveal the winner.' },
+  { id: 'dice',     label: 'Dice',      icon: Dice5,             free: false, description: 'Tumbling 3D dice that land on the winner\'s number.' },
+  { id: 'burst',    label: 'Burst',     icon: Zap,               free: false, description: 'Particle firework explosion with name cycling.' },
+  { id: 'matrix',   label: 'Matrix',    icon: Code2,             free: false, description: 'Falling code rain that resolves to the winning name.' },
+  { id: 'spotlight', label: 'Spotlight', icon: Sparkles,          free: false, description: 'Dramatic spotlight sweep across entries. Business only.' },
+  { id: 'vault',    label: 'Vault',     icon: KeyRound,          free: false, description: 'Safe-cracking dial that clicks open to reveal the winner. Business only.' },
+] as const
 
 interface Props {
   values: FormWizardValues
@@ -122,6 +134,49 @@ export function StepDesign({ values, update, isPro }: Props) {
               )
             })}
           </div>
+        </div>
+
+        {/* Draw theme picker */}
+        <div>
+          <Label className="mb-3 block">Draw Animation</Label>
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            {DRAW_THEME_OPTIONS.map(theme => {
+              const locked = !isPro && !theme.free
+              const selected = values.draw_theme === theme.id && !locked
+              const Icon = theme.icon
+              return (
+                <button
+                  key={theme.id}
+                  onClick={() => !locked && update({ draw_theme: theme.id })}
+                  title={locked ? `${theme.label} — Pro required` : theme.label}
+                  className={cn(
+                    'relative flex flex-col items-center gap-1.5 p-2.5 rounded-xl border text-center transition-all',
+                    selected
+                      ? 'border-foreground bg-foreground/5 ring-1 ring-foreground'
+                      : locked
+                      ? 'border-border bg-muted/20 opacity-40 cursor-not-allowed'
+                      : 'border-border bg-card hover:border-foreground/30 hover:bg-muted/20'
+                  )}
+                >
+                  <Icon className="size-4" />
+                  <span className="text-[10px] font-semibold leading-none">{theme.label}</span>
+                  {locked && (
+                    <div className="absolute -top-1 -right-1 size-3.5 bg-muted border rounded-full flex items-center justify-center">
+                      <Lock className="size-2" />
+                    </div>
+                  )}
+                  {selected && (
+                    <div className="absolute -top-1 -right-1 size-3.5 bg-foreground rounded-full flex items-center justify-center">
+                      <Check className="size-2 text-background" />
+                    </div>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-2">
+            {DRAW_THEME_OPTIONS.find(t => t.id === values.draw_theme)?.description ?? ''}
+          </p>
         </div>
       </div>
 
