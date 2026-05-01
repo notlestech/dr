@@ -252,6 +252,42 @@ function TemplateThumbnail({ id, accent }: { id: string; accent: string }) {
         </div>
       </div>
     ),
+    retro: (
+      <div className="h-16 rounded-lg overflow-hidden relative" style={{ background: '#1a0a2e', border: `2px solid ${accent}`, boxShadow: `2px 2px 0 ${accent}60` }}>
+        <div className="flex items-center gap-1 px-2 py-1" style={{ background: accent }}>
+          <div className="w-2 h-2 rounded-full bg-white/40" />
+          <div className="w-2 h-2 rounded-full bg-white/40" />
+          <div className="flex-1" />
+        </div>
+        <div className="flex flex-col gap-1 p-2">
+          <div className="w-10 h-1 rounded" style={{ backgroundColor: accent, boxShadow: `0 0 4px ${accent}` }} />
+          <div className="w-14 h-2 rounded" style={{ border: `1px solid ${accent}40`, background: accent + '10' }} />
+        </div>
+      </div>
+    ),
+    newspaper: (
+      <div className="h-16 rounded-lg bg-[#f5f0e8] flex flex-col overflow-hidden border border-black/20">
+        <div className="border-b-2 border-black/80 px-2 py-0.5 text-center">
+          <div className="w-12 h-1.5 rounded mx-auto" style={{ backgroundColor: accent }} />
+        </div>
+        <div className="flex-1 flex flex-col gap-1 p-2">
+          <div className="w-full h-1 rounded bg-black/20" />
+          <div className="w-10 h-2 rounded" style={{ backgroundColor: accent + '80' }} />
+        </div>
+      </div>
+    ),
+    midnight: (
+      <div className="h-16 rounded-lg flex flex-col items-center justify-center gap-1 p-2 relative overflow-hidden" style={{ background: 'linear-gradient(170deg, #080c14, #0d1220)' }}>
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="absolute w-0.5 h-0.5 rounded-full bg-white/60" style={{ left: `${15 + i * 15}%`, top: `${20 + (i % 3) * 25}%` }} />
+        ))}
+        <div className="w-7 h-7 rounded-full relative" style={{ background: `radial-gradient(circle at 35% 35%, ${accent}cc, ${accent}44)` }}>
+          <div className="absolute top-1 right-1 w-4 h-4 rounded-full" style={{ background: '#080c14' }} />
+        </div>
+        <div className="w-10 h-1.5 rounded" style={{ backgroundColor: accent + '60' }} />
+      </div>
+    ),
   }
   return map[id] ?? <div className="h-16 rounded-lg bg-muted" />
 }
+

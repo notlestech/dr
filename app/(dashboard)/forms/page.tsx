@@ -6,7 +6,7 @@ import { FormRowActions } from '@/components/forms/form-row-actions'
 import { Plus, Layers, ExternalLink, Dice5, Settings, Clock } from 'lucide-react'
 import { timeAgo } from '@/lib/utils'
 import type { Form, Plan } from '@/types/app'
-import { AdBanner } from '@/components/dashboard/ad-banner'
+
 
 export const metadata = { title: 'Forms' }
 
@@ -53,10 +53,7 @@ export default async function FormsPage() {
         </Link>
       </div>
 
-      {/* Inline ad — mobile/tablet only */}
-      <div className="2xl:hidden">
-        <AdBanner plan={plan} />
-      </div>
+
 
       {/* Empty state */}
       {formList.length === 0 ? (

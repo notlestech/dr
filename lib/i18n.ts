@@ -49,8 +49,8 @@ export const translations = {
       heading2: 'great giveaways',
       subtitle: 'Built for streamers who want drama, and companies who want reliability.',
       items: [
-        { title: '10 Form Templates',      desc: 'From minimal clean cards to neon gaming overlays — pick a design that fits your brand.' },
-        { title: 'Live Slot Machine Draw',  desc: 'Dramatic animated draw with Fisher-Yates shuffle. Fullscreen mode built for OBS capture.' },
+        { title: '15 Form Templates',     desc: 'From minimal clean cards to neon gaming overlays — pick a design that fits your brand.' },
+        { title: '9 Live Draw Animations', desc: 'Slot machine, wheel, cards, dice, burst, matrix rain, vault crack, spotlight, and picker — all with fullscreen OBS support.' },
         { title: 'Real-time Entry Count',  desc: 'Entries update live on the public form and your OBS overlay — no refresh needed.' },
         { title: 'Custom Subdomain',       desc: 'Every form gets a unique link at yourname.drawvault.site — shareable in seconds.' },
         { title: 'Bot Protection',         desc: 'Cloudflare Turnstile + IP deduplication blocks spam entries before they happen.' },
@@ -79,7 +79,7 @@ export const translations = {
       heading1: 'Common',
       heading2: 'questions',
       items: [
-        { q: 'Is DrawVault free to use?',                           a: 'Yes — the Free plan gives you 3 forms, 500 entries each, and 1 draw per form. No credit card required.' },
+        { q: 'Is DrawVault free to use?',                           a: 'Yes — the Free plan gives you 1 form, 500 entries, and 1 draw. No credit card required.' },
         { q: 'How does the live draw work?',                        a: 'Entries are shuffled with a Fisher-Yates algorithm for a fair, verifiable draw. The slot machine animation runs fullscreen with OBS capture support built in.' },
         { q: 'How do you prevent duplicate entries?',               a: 'IP deduplication is on by default. Pro and Business plans layer in Cloudflare Turnstile bot protection on top.' },
         { q: 'Can I use DrawVault for Twitch or YouTube giveaways?', a: 'Absolutely. Share the public form link in chat, run the fullscreen draw live on stream, and capture it directly with OBS.' },
@@ -149,8 +149,8 @@ export const translations = {
       heading2: 'ótimos sorteios',
       subtitle: 'Feito para streamers que querem drama e empresas que precisam de confiabilidade.',
       items: [
-        { title: '10 Templates de Formulário',  desc: 'De cards minimalistas a overlays neon — escolha o design que combina com sua marca.' },
-        { title: 'Sorteio com Slot Machine',     desc: 'Animação dramática com embaralhamento Fisher-Yates. Modo tela cheia feito para OBS.' },
+        { title: '15 Templates de Formulário', desc: 'De cards minimalistas a overlays neon — escolha o design que combina com sua marca.' },
+        { title: '9 Animações de Sorteio',     desc: 'Slot machine, roda, cartas, dados, burst, matrix, cofre, spotlight e picker — com suporte OBS.' },
         { title: 'Contagem em Tempo Real',       desc: 'Inscrições atualizam ao vivo no formulário público e no overlay do OBS.' },
         { title: 'Subdomínio Personalizado',     desc: 'Cada formulário tem um link em seuname.drawvault.site — compartilhável em segundos.' },
         { title: 'Proteção contra Bots',         desc: 'Cloudflare Turnstile + deduplicação de IP bloqueia inscrições spam antes que aconteçam.' },
@@ -179,7 +179,7 @@ export const translations = {
       heading1: 'Perguntas',
       heading2: 'frequentes',
       items: [
-        { q: 'O DrawVault é gratuito?',                                   a: 'Sim — o plano Grátis oferece 3 formulários, 500 inscrições cada e 1 sorteio por formulário. Sem cartão de crédito.' },
+        { q: 'O DrawVault é gratuito?',                                   a: 'Sim — o plano Grátis oferece 1 formulário, 500 inscrições e 1 sorteio. Sem cartão de crédito.' },
         { q: 'Como funciona o sorteio ao vivo?',                          a: 'As inscrições são embaralhadas com o algoritmo Fisher-Yates para um sorteio justo. A animação roda em tela cheia com suporte ao OBS.' },
         { q: 'Como evitar inscrições duplicadas?',                        a: 'Deduplicação por IP está ativa por padrão. Planos Pro e Business adicionam proteção Cloudflare Turnstile.' },
         { q: 'Posso usar para sorteios na Twitch ou YouTube?',            a: 'Claro. Compartilhe o link no chat, rode o sorteio ao vivo na stream e capture com OBS.' },

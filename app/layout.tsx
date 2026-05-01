@@ -61,13 +61,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <head>
-        {/* Google AdSense — site verification + ad serving */}
-        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7840488343669346"
-          crossOrigin="anonymous"
-        />
         {/* JSON-LD structured data */}
         <script
           type="application/ld+json"
@@ -83,7 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               '@type': 'Offer',
               price: '0',
               priceCurrency: 'USD',
-              description: 'Free plan — 3 forms, 500 entries each, no credit card required.',
+              description: 'Free plan — 1 form, 500 entries, no credit card required.',
             },
           }) }}
         />

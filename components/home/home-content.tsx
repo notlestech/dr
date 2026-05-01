@@ -31,9 +31,9 @@ const FEATURE_ICONS = [Layers, Dice5, Users, Globe, Shield, BarChart3]
 const HOW_ICONS     = [PenLine, Share2, Dice5]
 
 const PLAN_FEATURES = {
-  Free:     ['3 forms', '500 entries per form', '4 form templates', '1 draw per form', 'DrawVault branding'],
-  Pro:      ['Unlimited forms', '10,000 entries per form', 'All 10 templates', 'Unlimited draws', 'No branding', 'Analytics + CSV export'],
-  Business: ['Everything in Pro', 'Unlimited entries', '3 workspaces', 'Auto-draw scheduling', 'Webhooks', 'Audit logs'],
+  Free:     ['1 form', '500 entries per form', '4 form templates', '1 draw per form', 'DrawVault branding'],
+  Pro:      ['Unlimited forms', '10,000 entries per form', 'All 15 templates', 'Unlimited draws', '7 draw themes', 'No branding', 'Analytics + CSV export'],
+  Business: ['Everything in Pro', 'Unlimited entries', '3 workspaces', 'All 9 draw themes', 'Auto-draw scheduling', 'Webhooks', 'Audit logs'],
 }
 const PLAN_PRICES   = ['$0', '$2.50', '$5']
 const PLAN_PERIODS  = ['/mo', '/mo', '/mo']

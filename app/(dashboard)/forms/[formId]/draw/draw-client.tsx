@@ -19,19 +19,23 @@ import { SpotlightDraw } from '@/components/draw/spotlight-draw'
 import { DiceDraw } from '@/components/draw/dice-draw'
 import { BurstDraw } from '@/components/draw/burst-draw'
 import { PickerDraw } from '@/components/draw/picker-draw'
+import { MatrixDraw } from '@/components/draw/matrix-draw'
+import { VaultDraw } from '@/components/draw/vault-draw'
 
 interface Entry { id: string; displayName: string }
 interface Form  { id: string; name: string; accent_color: string; draw_theme: string; status: string; subdomain: string }
 interface Props  { form: Form; entries: Entry[]; userId: string; isPro: boolean; isBusiness: boolean }
 
 const DRAW_THEMES = [
-  { id: 'slot',      label: 'Slot',      icon: Shuffle,    free: true,  pro: true,  business: true  },
-  { id: 'wheel',     label: 'Wheel',     icon: RotateCw,   free: false, pro: true,  business: true  },
-  { id: 'cards',     label: 'Cards',     icon: CreditCard, free: false, pro: true,  business: true  },
-  { id: 'dice',      label: 'Dice',      icon: Dice5,      free: false, pro: true,  business: true  },
-  { id: 'burst',     label: 'Burst',     icon: Zap,        free: false, pro: true,  business: true  },
+  { id: 'slot',      label: 'Slot',      icon: Shuffle,           free: true,  pro: true,  business: true  },
+  { id: 'wheel',     label: 'Wheel',     icon: RotateCw,          free: false, pro: true,  business: true  },
+  { id: 'cards',     label: 'Cards',     icon: CreditCard,        free: false, pro: true,  business: true  },
+  { id: 'dice',      label: 'Dice',      icon: Dice5,             free: false, pro: true,  business: true  },
+  { id: 'burst',     label: 'Burst',     icon: Zap,               free: false, pro: true,  business: true  },
+  { id: 'matrix',    label: 'Matrix',    icon: Sparkles,          free: false, pro: true,  business: true  },
   { id: 'spotlight', label: 'Spotlight', icon: Sparkles,          free: false, pro: false, business: true  },
-  { id: 'picker',    label: 'Picker',    icon: MousePointerClick,  free: true,  pro: true,  business: true  },
+  { id: 'vault',     label: 'Vault',     icon: Lock,              free: false, pro: false, business: true  },
+  { id: 'picker',    label: 'Picker',    icon: MousePointerClick, free: true,  pro: true,  business: true  },
 ] as const
 
 const ITEM_H = 72
@@ -326,6 +330,28 @@ export function DrawClient({ form, entries: initialEntries, userId, isPro, isBus
             {/* === SPOTLIGHT === */}
             {drawTheme === 'spotlight' && (
               <SpotlightDraw
+                entries={entries}
+                accent={accent}
+                winner={winner}
+                isSpinning={phase === 'spinning'}
+                onComplete={onAnimationComplete}
+              />
+            )}
+
+            {/* === MATRIX === */}
+            {drawTheme === 'matrix' && (
+              <MatrixDraw
+                entries={entries}
+                accent={accent}
+                winner={winner}
+                isSpinning={phase === 'spinning'}
+                onComplete={onAnimationComplete}
+              />
+            )}
+
+            {/* === VAULT === */}
+            {drawTheme === 'vault' && (
+              <VaultDraw
                 entries={entries}
                 accent={accent}
                 winner={winner}

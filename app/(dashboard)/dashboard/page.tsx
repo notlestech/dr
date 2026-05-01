@@ -7,7 +7,7 @@ import { Plus, Trophy, Users, Layers, ArrowRight, Dice5, Clock, Zap, Star, Build
 import { formatNumber, timeAgo } from '@/lib/utils'
 import type { Form, Plan } from '@/types/app'
 import { UpgradeToast } from '@/components/dashboard/upgrade-toast'
-import { AdBanner } from '@/components/dashboard/ad-banner'
+
 
 interface RecentDraw {
   id: string
@@ -178,10 +178,7 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* Inline ad — mobile/tablet only (side columns handle wide screens) */}
-      <div className="2xl:hidden">
-        <AdBanner plan={plan} />
-      </div>
+
 
       {/* Recent forms (top 3) */}
       <div className="space-y-3">

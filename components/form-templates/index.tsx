@@ -13,6 +13,9 @@ import { ArcadeTemplate } from './arcade'
 import { ConversationalTemplate } from './conversational'
 import { TerminalTemplate } from './terminal'
 import { HolographicTemplate } from './holographic'
+import { RetroTemplate } from './retro'
+import { NewspaperTemplate } from './newspaper'
+import { MidnightTemplate } from './midnight'
 
 const TEMPLATE_MAP: Record<FormTemplate, React.ComponentType<FormTemplateProps>> = {
   clean:          CleanTemplate,
@@ -27,6 +30,9 @@ const TEMPLATE_MAP: Record<FormTemplate, React.ComponentType<FormTemplateProps>>
   conversational: ConversationalTemplate,
   terminal:       TerminalTemplate,
   holographic:    HolographicTemplate,
+  retro:          RetroTemplate,
+  newspaper:      NewspaperTemplate,
+  midnight:       MidnightTemplate,
 }
 
 export function FormTemplateRenderer(props: FormTemplateProps) {

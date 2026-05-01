@@ -13,8 +13,11 @@ export type FormTemplate =
   | 'conversational'
   | 'terminal'
   | 'holographic'
+  | 'retro'
+  | 'newspaper'
+  | 'midnight'
 
-export type DrawTheme = 'slot' | 'wheel' | 'cards' | 'dice' | 'burst' | 'spotlight' | 'picker'
+export type DrawTheme = 'slot' | 'wheel' | 'cards' | 'dice' | 'burst' | 'spotlight' | 'picker' | 'matrix' | 'vault'
 
 export type FormStatus = 'draft' | 'active' | 'closed'
 
@@ -172,6 +175,9 @@ export const FORM_TEMPLATES: FormTemplateInfo[] = [
   { id: 'conversational', name: 'Conversational', description: 'One question at a time like Typeform',       tier: 'pro',  tags: ['interactive', 'engagement'] },
   { id: 'terminal',       name: 'Terminal',       description: 'Hacker terminal aesthetic, dark & monospace', tier: 'pro',  tags: ['dark', 'developer', 'hacker'] },
   { id: 'holographic',    name: 'Holographic',    description: 'Iridescent premium with animated shimmer',   tier: 'pro',  tags: ['premium', 'modern', 'luxury'] },
+  { id: 'retro',          name: 'Retro',          description: 'CRT window chrome with synthwave grid',      tier: 'pro',  tags: ['retro', 'gaming', 'dark'] },
+  { id: 'newspaper',      name: 'Newspaper',      description: 'Editorial masthead with serif typography',   tier: 'pro',  tags: ['editorial', 'print', 'brand'] },
+  { id: 'midnight',       name: 'Midnight',       description: 'Star field, moon accent, glassmorphism',     tier: 'pro',  tags: ['dark', 'premium', 'elegant'] },
 ]
 
 export const PLAN_LIMITS: Record<Plan, {
@@ -186,12 +192,12 @@ export const PLAN_LIMITS: Record<Plan, {
 }> = {
   free: {
     workspaces: 1,
-    forms: 3,
+    forms: 1,
     entriesPerForm: 500,
     fields: 3,
     draws: 1,
     templates: ['clean', 'neon', 'gradient', 'party'],
-    ads: true,
+    ads: false,
     branding: true,
   },
   pro: {
@@ -200,7 +206,7 @@ export const PLAN_LIMITS: Record<Plan, {
     entriesPerForm: 10000,
     fields: 10,
     draws: Infinity,
-    templates: ['clean', 'neon', 'gradient', 'party', 'luxury', 'brutal', 'glass', 'split', 'arcade', 'conversational', 'terminal', 'holographic'],
+    templates: ['clean', 'neon', 'gradient', 'party', 'luxury', 'brutal', 'glass', 'split', 'arcade', 'conversational', 'terminal', 'holographic', 'retro', 'newspaper', 'midnight'],
     ads: false,
     branding: false,
   },
@@ -210,7 +216,7 @@ export const PLAN_LIMITS: Record<Plan, {
     entriesPerForm: Infinity,
     fields: Infinity,
     draws: Infinity,
-    templates: ['clean', 'neon', 'gradient', 'party', 'luxury', 'brutal', 'glass', 'split', 'arcade', 'conversational', 'terminal', 'holographic'],
+    templates: ['clean', 'neon', 'gradient', 'party', 'luxury', 'brutal', 'glass', 'split', 'arcade', 'conversational', 'terminal', 'holographic', 'retro', 'newspaper', 'midnight'],
     ads: false,
     branding: false,
   },

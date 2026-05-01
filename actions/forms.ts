@@ -32,19 +32,9 @@ export async function createForm(values: FormWizardValues) {
   const plan = sub?.plan ?? 'free'
 
   if (plan === 'free') {
-    // Hard lifetime cap: 3 forms total (including deleted)
-    if ((ws?.forms_created_total ?? 0) >= 3) {
-      return { error: 'Free plan allows up to 3 forms total. Upgrade to create more.' }
-    }
-    // Rate limit: 1 new form per 7 days
-    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const { count: recentCount } = await supabase
-      .from('forms')
-      .select('*', { count: 'exact', head: true })
-      .eq('workspace_id', wid)
-      .gte('created_at', oneWeekAgo)
-    if ((recentCount ?? 0) >= 1) {
-      return { error: 'Free plan allows 1 new form per week. Upgrade for unlimited form creation.' }
+    // Hard lifetime cap: 1 form total (including deleted)
+    if ((ws?.forms_created_total ?? 0) >= 1) {
+      return { error: 'Free plan allows 1 form. Upgrade to create more.' }
     }
   }
 
