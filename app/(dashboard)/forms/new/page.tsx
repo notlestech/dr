@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { FormWizard } from '@/components/forms/wizard/form-wizard'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Crown, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
@@ -49,16 +49,12 @@ export default async function NewFormPage() {
           You have reached the 1-form limit on the Free plan. Upgrade to Pro for unlimited forms, unlimited draws, and premium templates.
         </p>
         <div className="flex gap-4">
-          <Button variant="outline" asChild>
-            <Link href="/forms">
-              <ArrowLeft className="size-4 mr-2" /> Back to forms
-            </Link>
-          </Button>
-          <Button asChild className="bg-amber-500 hover:bg-amber-600 text-white">
-            <Link href="/upgrade">
-              <Crown className="size-4 mr-2" /> Upgrade to Pro
-            </Link>
-          </Button>
+          <Link href="/forms" className={buttonVariants({ variant: "outline" })}>
+            <ArrowLeft className="size-4 mr-2" /> Back to forms
+          </Link>
+          <Link href="/upgrade" className={buttonVariants({ className: "bg-amber-500 hover:bg-amber-600 text-white" })}>
+            <Crown className="size-4 mr-2" /> Upgrade to Pro
+          </Link>
         </div>
       </div>
     )
